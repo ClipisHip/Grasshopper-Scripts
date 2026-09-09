@@ -45,6 +45,10 @@
     double leverAng = 90.0;   // lever direction [deg]
     double slotZ    = 0.0;    // slot height above the collar base, 0 -> Height/2
     double zOff     = 0.0;    // slide along the axis, to sit level with the spring
+    bool   openTop  = true;   // cut the slot through to the collar's TOP edge, so the
+                              // collar can drop on over the tang during assembly.
+                              // The notch sides still drive the tang; a retaining cap
+                              // above the collar stops it lifting off.
 
     double tol = 0.001;
     if (Rhino.RhinoDoc.ActiveDoc != null) tol = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
@@ -95,9 +99,12 @@
     Vector3d td = new Vector3d(-Math.Sin(ta), Math.Cos(ta), 0.0);      // tangent
     Vector3d nd = new Vector3d(Math.Cos(ta), Math.Sin(ta), 0.0);       // radial
     Plane sp = new Plane(p0, td, nd);
+    // the slot plane's own z runs along WORLD -Z, so opening the notch upward
+    // means extending the interval negative, out past the collar's top face
+    double zLo = openTop ? (slotZ - Hc - 1.0) : -0.5 * sw;
     Box slot = new Box(sp, new Interval(-0.5 * sw, L2 + 5.0),
                            new Interval(-0.5 * sw, 0.5 * sw),
-                           new Interval(-0.5 * sw, 0.5 * sw));
+                           new Interval(zLo, 0.5 * sw));
     Line slotLine = new Line(p0, p0 + td * (L2 + 5.0));
 
     Brep[] diff = Brep.CreateBooleanDifference(new Brep[] { body },
@@ -131,6 +138,8 @@
     sb.AppendLine("--");
     sb.AppendLine("Set TangLength on the spring to at least " + (L2 + 3.0).ToString("0.#") + ".");
     sb.AppendLine("Twist the lever the UNWINDING way to release.");
+    sb.AppendLine(openTop ? "Slot is OPEN to the top - collar drops on over the tang."
+                          : "Slot is CLOSED - the collar cannot pass the tang on assembly.");
     if (log.Count > 0) { sb.AppendLine("--"); foreach (string t in log) sb.AppendLine("! " + t); }
 
     Body     = body;
