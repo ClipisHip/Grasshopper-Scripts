@@ -72,7 +72,19 @@
                                   // holes and the pins come out on their own.
                                   // REQUIRED for assembly - the pins reach in to
                                   // radius 7.10 and would foul the 8.575 hub if
-                                  // they were moulded in.          // slide the sleeve along the axis
+                                  // they were moulded in.
+
+    // --- tabs: return-spring seats AND the anti-rotation keys -----------------
+    // A spring rising from the base cannot reach the sleeve body: anything that
+    // clears the gear (radius 13.68) is further out than the sleeve is wide.
+    // So the sleeve grows tabs that reach past it. They sit at the TOP of the
+    // sleeve, which leaves the spring 12 mm to go solid in rather than 6.
+    int    tabN   = 2;            // one per return spring; 0 = no tabs
+    double tabR   = 20.0;         // tab OUTER radius
+    double tabW   = 6.0;          // tab width (tangential)
+    double tabThk = 2.0;          // tab thickness (axial)
+    double tabPhi = 0.0;          // angle of the first tab [deg]
+    double tabTop = 0.0;          // gap from the sleeve top down to the tab top
 
     double tol = 0.001;
     if (Rhino.RhinoDoc.ActiveDoc != null) tol = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
@@ -129,6 +141,35 @@
     Brep[] rr = Brep.CreateBooleanDifference(sleeve, boreB, tol);
     if (rr != null && rr.Length > 0) sleeve = rr[0];
     else log.Add("Bore boolean failed.");
+
+    // ---------- tabs ---------------------------------------------------------
+    if (tabN > 0 && tabR > Ro)
+    {
+      double tz = Hs - tabTop - tabThk;             // tab underside = spring seat
+      if (tz < 0.0) { tz = 0.0; log.Add("Tab is taller than the sleeve - dropped to the base."); }
+      List<Brep> tabs = new List<Brep>();
+      tabs.Add(sleeve);
+      for (int i = 0; i < tabN; i++)
+      {
+        double a = RhinoMath.ToRadians(tabPhi) + 2.0 * Math.PI * i / tabN;
+        Vector3d rad = new Vector3d(Math.Cos(a), Math.Sin(a), 0.0);
+        Vector3d tng = Vector3d.CrossProduct(Vector3d.ZAxis, rad); tng.Unitize();
+        Plane tp2 = new Plane(Point3d.Origin, rad, tng);
+        tabs.Add(new Box(tp2, new Interval(Rb, tabR),
+                              new Interval(-0.5 * tabW, 0.5 * tabW),
+                              new Interval(tz, tz + tabThk)).ToBrep());
+      }
+      Brep[] tu = Brep.CreateBooleanUnion(tabs, tol);
+      if (tu != null && tu.Length > 0)
+      {
+        Brep best = tu[0]; double bv = -1.0;
+        foreach (Brep b in tu) { double v = b.GetBoundingBox(true).Volume; if (v > bv) { bv = v; best = b; } }
+        sleeve = best;
+      }
+      else log.Add("Tab union failed.");
+    }
+    else if (tabN > 0)
+      log.Add("tabR must be larger than the sleeve OD radius " + Ro.ToString("0.##") + " - no tabs made.");
 
     // ---------- pins ---------------------------------------------------------
     List<Brep> pins = new List<Brep>();

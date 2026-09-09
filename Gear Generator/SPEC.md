@@ -180,6 +180,69 @@ every other component. Everything then lands coaxial and correctly stacked.
                 lever parks engaged
 
 --------------------------------------------------------------------------------
+## 9. BASE PLATE                                   (BasePlate.cs)
+
+    INPUTS      PlateDia      54
+                PlateThk      2
+                ShaftDia      6
+                ShaftLen      42
+                PinCount      2
+                BasePlane     <- rack GearPlane
+    CONSTANTS   pinR          18       <- spring pin circle RADIUS
+                pinDia        3
+                pinLen        8
+                scN / scR     3 / 25   <- screw circle, matches the housing
+                scDia         3.4      <- CLEARANCE (housing has the 2.5 pilot)
+
+    RESULT      plate z -2 .. 0; its TOP is the gear plane.
+                springs at radius 18 clear the gear (radius 13.68) by 1.32
+
+--------------------------------------------------------------------------------
+## 10. HOUSING                                     (Housing.cs)
+
+    INPUTS      InnerDia      42
+                WallThk       2
+                Height        44
+                LeverSlotDeg  60
+                RackSlotW     7
+                RackSlotH     7
+                BasePlane     <- rack GearPlane
+    CONSTANTS   plateThk      2        <- housing starts at -2, on the plate
+                flangeD/T     54 / 3
+                scN/scR/scDia 3 / 25 / 2.5   <- PILOT holes
+                tabN          2
+                tabSlotW      7        <- sleeve tab 6 + 1 play
+                tabZlo/Zhi    10 / 32  <- tab travels 12..30
+                leverPhi      90
+                leverZlo/Zhi  35 / 41  <- collar sits 36..40
+                rackN         2
+                rackZlo       0        <- gear sits 0..6
+
+    RESULT      bore 42, OD 46, flange 54.
+                The tab slots do TWO jobs: stop the sleeve rotating, and
+                clear the return springs.
+
+--------------------------------------------------------------------------------
+## RETURN SPRINGS
+
+    A spring rising from the base CANNOT push on the sleeve body: anything
+    clearing the gear (radius 13.68) sits further out than the sleeve is wide
+    (radius 13). So the sleeve grows TABS that reach past the gear.
+
+    Put the tabs at the TOP of the sleeve, not the bottom:
+
+        tab at the bottom: spring 22 -> 6,  solid length must be under 6
+        tab at the TOP:    spring 28 -> 12, solid length must be under 12
+
+    Sleeve constants: tabN 2, tabR 20, tabW 6, tabThk 2, tabTop 0.
+    Tab underside is the spring seat; it travels z 12 (closed) to 28 (open),
+    so the spring works over 16 mm - the stroke.
+
+    Springs: 2 off, OD about 6, free length about 30, on the base pins at
+    radius 18. They also drive the jaws open, since the 54.9 deg lead angle
+    back-drives easily.
+
+--------------------------------------------------------------------------------
 ## THE STACK
 
     z 40 ---- rotor top
@@ -216,8 +279,8 @@ every other component. Everything then lands coaxial and correctly stacked.
     1. DIRECTION. Pushing down must turn the gear the way the spring SLIPS.
        50/50 and invisible in CAD. If it locks on the first push, flip `hand`
        on the cam. Check on the bench before cutting the enclosure.
-    2. RETURN SPRING. Releasing the clutch only removes the lock. A torsion
-       spring on the shaft is what actually opens the jaws.
+    2. RETURN SPRINGS - now solved: 2 compression springs on the base pins,
+       pushing up on the sleeve tabs. See the RETURN SPRINGS section.
     3. MOULDING. The helical groove cannot be pulled straight from a tool -
        it needs an unscrewing core, or split the rotor into cam + gear/hub
        joined by a keyed press-fit. Price both.
@@ -242,6 +305,9 @@ every other component. Everything then lands coaxial and correctly stacked.
     5. collar  - drops down from the top; bore 20.95 clears the hub and the
                  spring OD 20.15, and the open notch passes the tang
     6. cap     - traps the collar axially, still free to rotate
+    7. springs - 2 compression springs dropped over the base pins
+    8. housing - lowered over the lot, sleeve tabs entering the slots and the
+                 lever entering its gap; 3 screws up through the plate
 
     WHY THE PINS GO IN LAST. A ball pin reaches inward to radius 7.10, but the
     spring hub is radius 8.575. A sleeve with the pins already in it cannot be
