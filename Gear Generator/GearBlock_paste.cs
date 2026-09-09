@@ -2,7 +2,8 @@
 //  THIS BUILD - 5 inputs to create on the component:
 //     Module 1.5   Teeth 16   Pressure 20   Backlash 3
 //     Pln <- the RACK script's GearPlane          (type hint: Plane)
-//  Then extrude the Gear curve 6 mm, capped.
+//  The Solid output is already extruded 6 mm AND bored 6.4 - union it
+//  with the cam and hub to make the rotor. Gear is still the raw curve.
 //
 //  This is the SHORT variant: Shift, Addendum, Dedendum, RootFillet and
 //  Samples are constants a few lines down, already set for this build:
@@ -13,7 +14,8 @@
 
   private void RunScript(double Module, int Teeth, double Pressure, double Backlash,
                          Plane Pln,
-                         ref object Gear, ref object Circles, ref object Info)
+                         ref object Gear, ref object Solid,
+                         ref object Circles, ref object Info)
   {
     List<string> log = new List<string>();
 
@@ -29,6 +31,9 @@
     double hf = 1.25;             // dedendum coefficient hf*
     double rc = 0.38;             // root fillet radius = rc * module
     int    ns = 48;               // sample points per flank
+    double faceW = 6.0;           // extrusion thickness, 0 = curve only
+    double bore  = 6.4;           // MUST match the cam and hub bore
+    double btol  = 0.001;         // boolean tolerance
     Plane  pl = Pln.IsValid ? Pln : Plane.WorldXY;
 
     double sa = Math.Sin(a), ca = Math.Cos(a), ta = Math.Tan(a);
@@ -191,6 +196,37 @@
     if (!gear.IsClosed) gear.MakeClosed(jt);
 
     Transform toPlane = Transform.PlaneToPlane(Plane.WorldXY, pl);
+
+    // ---------- solid, ready to union into the one-piece rotor ---------------
+    // The gear needs the SAME bore as the cam and hub. Without it the disc is
+    // solid through the middle and the shaft has nowhere to go once the three
+    // are unioned into one rotor.
+    Brep solid = null;
+    if (faceW > 1e-9)
+    {
+      Extrusion exG = Extrusion.Create(gear, faceW, true);
+      if (exG == null) log.Add("Could not extrude the gear to a solid.");
+      else
+      {
+        solid = exG.ToBrep();
+        if (solid.SolidOrientation == BrepSolidOrientation.Inward) solid.Flip();
+        if (bore > 1e-9)
+        {
+          Brep bc = new Cylinder(new Circle(new Plane(new Point3d(0, 0, -1.0), Vector3d.ZAxis),
+                                            0.5 * bore), faceW + 2.0).ToBrep(true, true);
+          if (bc.SolidOrientation == BrepSolidOrientation.Inward) bc.Flip();
+          Brep[] bd = Brep.CreateBooleanDifference(solid, bc, btol);
+          if (bd != null && bd.Length > 0)
+          {
+            Brep best = bd[0]; double bv = -1.0;
+            foreach (Brep b in bd) { double v = b.GetBoundingBox(true).Volume; if (v > bv) { bv = v; best = b; } }
+            solid = best;
+          }
+          else log.Add("Gear bore boolean failed.");
+        }
+        solid.Transform(toPlane);
+      }
+    }
     gear.Transform(toPlane);
 
     List<Curve> refs = new List<Curve>();
@@ -218,6 +254,7 @@
     if (log.Count > 0) { sb.AppendLine("--"); foreach (string s in log) sb.AppendLine("! " + s); }
 
     Gear    = gear;
+    Solid   = solid;
     Circles = refs;
     Info    = sb.ToString();
   }

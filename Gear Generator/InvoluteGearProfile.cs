@@ -14,6 +14,7 @@
 //     Pln         Plane    base plane
 //  Component OUTPUTS:
 //     Gear        closed planar Curve
+//     Solid       that curve extruded 6 and BORED 6.4, for the rotor
 //     Circles     tip / pitch / base / root circles
 //     Info        report + warnings
 //
@@ -206,6 +207,37 @@
     if (!gear.IsClosed) gear.MakeClosed(jt);
 
     Transform toPlane = Transform.PlaneToPlane(Plane.WorldXY, pl);
+
+    // ---------- solid, ready to union into the one-piece rotor ---------------
+    // The gear needs the SAME bore as the cam and hub. Without it the disc is
+    // solid through the middle and the shaft has nowhere to go once the three
+    // are unioned into one rotor.
+    Brep solid = null;
+    if (faceW > 1e-9)
+    {
+      Extrusion exG = Extrusion.Create(gear, faceW, true);
+      if (exG == null) log.Add("Could not extrude the gear to a solid.");
+      else
+      {
+        solid = exG.ToBrep();
+        if (solid.SolidOrientation == BrepSolidOrientation.Inward) solid.Flip();
+        if (bore > 1e-9)
+        {
+          Brep bc = new Cylinder(new Circle(new Plane(new Point3d(0, 0, -1.0), Vector3d.ZAxis),
+                                            0.5 * bore), faceW + 2.0).ToBrep(true, true);
+          if (bc.SolidOrientation == BrepSolidOrientation.Inward) bc.Flip();
+          Brep[] bd = Brep.CreateBooleanDifference(solid, bc, btol);
+          if (bd != null && bd.Length > 0)
+          {
+            Brep best = bd[0]; double bv = -1.0;
+            foreach (Brep b in bd) { double v = b.GetBoundingBox(true).Volume; if (v > bv) { bv = v; best = b; } }
+            solid = best;
+          }
+          else log.Add("Gear bore boolean failed.");
+        }
+        solid.Transform(toPlane);
+      }
+    }
     gear.Transform(toPlane);
 
     List<Curve> refs = new List<Curve>();
@@ -233,6 +265,7 @@
     if (log.Count > 0) { sb.AppendLine("--"); foreach (string s in log) sb.AppendLine("! " + s); }
 
     Gear    = gear;
+    Solid   = solid;
     Circles = refs;
     Info    = sb.ToString();
 

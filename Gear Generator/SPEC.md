@@ -21,7 +21,10 @@ every other component. Everything then lands coaxial and correctly stacked.
                 hf            1.25
                 rc            0.38
                 ns            48
-    AFTER       extrude the profile curve 6 mm, capped
+                faceW         6        <- extrusion thickness
+                bore          6.4      <- MUST match the cam and hub
+    OUTPUT      Solid is already extruded AND bored - union it with the cam
+                and hub to make the rotor. Gear is still the raw curve.
 
     NOTE        GearBlock_paste.cs is the SHORT variant: only Module, Teeth,
                 Pressure, Backlash and Pln are wired; Shift, Addendum,
@@ -358,7 +361,10 @@ every other component. Everything then lands coaxial and correctly stacked.
     z  0..6   gear, tip dia 27.36
     z  0      gear plane = rack GearPlane origin
 
-    ONE MOULDED ROTOR = gear + cam + hub, single 6 mm bore throughout.
+    ONE MOULDED ROTOR = gear + cam + hub, single 6.4 bore throughout on a
+    6.0 shaft. Union gear.Solid + cam.Body + hub.Body.
+    The gear needs the bore too - without it the disc is solid through the
+    middle and the shaft has nowhere to go.
     SEPARATE = sleeve + 2 pins, spring, collar, 2 racks, shaft, return spring,
                enclosure.
 
