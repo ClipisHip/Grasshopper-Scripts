@@ -66,7 +66,7 @@
     double turnsO = 0.0;          // > 0 overrides the rack-derived turn count
     int    starts = 2;            // grooves around the cylinder (2 = balanced pin load)
     double bore   = 6.0;          // central hole diameter, 0 = solid
-    double phi0   = 0.0;          // groove start angle [deg]
+    double phi0   = 90.0;         // groove start angle - MUST equal the sleeve's phi0          // groove start angle [deg]
     double hand   = 1.0;          // +1 right-hand helix, -1 left-hand
     int    spt    = 64;           // cutter sections per turn
     double over   = 0.0;          // radial overshoot for a clean cut (0 -> 5% of D)

@@ -11,7 +11,7 @@
 
 // ===========================================================================
 //  THIS BUILD - 6 inputs to create on the component:
-//     PlateDia 54   PlateThk 2   ShaftDia 6   ShaftLen 42
+//     PlateDia 62   PlateThk 2   ShaftDia 6   ShaftLen 42
 //     PinCount 2    BasePlane <- the RACK script's GearPlane
 //  Every constant below is already set for this build.
 // ===========================================================================
@@ -25,21 +25,21 @@
 
     List<string> log = new List<string>();
 
-    double Dp = PlateDia > 1e-9 ? PlateDia : 54.0;
+    double Dp = PlateDia > 1e-9 ? PlateDia : 62.0;
     double tp = PlateThk > 1e-9 ? PlateThk : 2.0;
     double Ds = ShaftDia > 1e-9 ? ShaftDia : 6.0;
     double Ls = ShaftLen > 1e-9 ? ShaftLen : 42.0;
     int    np = PinCount > 0    ? PinCount : 2;
 
     // --- match these to the housing and the sleeve ---------------------------
-    double pinR    = 18.0;   // spring pin circle RADIUS - must clear the gear
+    double pinR    = 18.0;   // spring pin circle RADIUS - matches the sleeve pockets
     double pinDia  = 3.0;    // pin diameter, guides the spring's lower end
     double pinLen  = 8.0;    // how far the pin stands proud of the plate
     double pinPhi  = 0.0;    // angle of the first pin [deg]
     double springOD = 6.0;   // for the report / clearance check only
 
     int    scN     = 3;      // screws pulling the housing down
-    double scR     = 25.0;   // screw circle RADIUS - must match the housing flange
+    double scR     = 28.0;   // screw circle RADIUS - must match the housing flange
     double scDia   = 3.4;    // clearance hole for M3 (housing has the 2.5 pilot)
     double scPhi   = 60.0;   // angle of the first screw [deg]
 
