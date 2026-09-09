@@ -69,6 +69,17 @@
     double rackOff  = 13.87;  // centre of the rack's radial span (10.68..17.05)
     double rackZlo  = 0.0;
 
+    // --- CLUTCH ANCHOR SLOT --------------------------------------------------
+    // The wrap spring only works because ONE tang is held still while the hub
+    // turns under it. That tang has to be anchored to the HOUSING - without
+    // this slot the spring just spins with the hub and never grips.
+    // Take these from the coil script's report ("anchor tip").
+    bool   ancOn   = true;
+    double ancX    = 19.0;    // slot starts here and runs out through the wall
+    double ancY    = 9.33;    // = coil centreline radius, tang runs along +X
+    double ancZ    = 31.0;    // = coil zOff, the helix start
+    double ancW    = 1.9;     // wire 1.5 + fit
+
     double zOff     = 0.0;
 
     double tol = 0.001;
@@ -171,6 +182,12 @@
                       new Interval(rackZlo, rackZlo + rh)).ToBrep());
     }
 
+    if (ancOn)
+      cut.Add(new Box(Plane.WorldXY,
+                      new Interval(ancX, db + ao + 4.0),
+                      new Interval(ancY - 0.5 * ancW, ancY + 0.5 * ancW),
+                      new Interval(ancZ - 0.5 * ancW, ancZ + 0.5 * ancW)).ToBrep());
+
     {
       double a1 = RhinoMath.ToRadians(leverPhi - 0.5 * lv);
       double a2 = RhinoMath.ToRadians(leverPhi + 0.5 * lv);
@@ -224,6 +241,9 @@
     sb.AppendLine("                    one exits each end - they sit diagonally, not opposed");
     sb.AppendLine("lever gap           " + lv.ToString("0.#") + " deg at " + leverPhi.ToString("0.#") +
                   " deg, z " + leverZlo.ToString("0.##") + " .. " + leverZhi.ToString("0.##"));
+    sb.AppendLine("clutch anchor slot  " + (ancOn ? ancW.ToString("0.##") + " square at (" +
+                  ancX.ToString("0.#") + "+, " + ancY.ToString("0.##") + ", " + ancZ.ToString("0.##") + ")"
+                  : "OFF - the spring will just spin with the hub"));
     sb.AppendLine("--");
     sb.AppendLine("DIAGNOSTICS");
     sb.AppendLine("  shell union       " + uniState);

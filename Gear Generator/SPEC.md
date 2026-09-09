@@ -146,7 +146,10 @@ every other component. Everything then lands coaxial and correctly stacked.
                 Torque        1.92
                 BasePlane     <- rack GearPlane
     CONSTANTS   E 200000   sAll 1200   mu 0.30   pHub 20
-                gap 0   phi0 0   hand +1
+                gap 0   hand +1
+                phi0          90       <- tangs on the WAIST, running along X
+                tlA           24       <- ANCHOR tang, reaches the housing slot
+                tlC           16       <- CONTROL tang, only clears the collar
                 zOff          31
 
 --------------------------------------------------------------------------------
@@ -272,6 +275,29 @@ every other component. Everything then lands coaxial and correctly stacked.
 
     Assumed layout: two parallel racks either side of the gear, moving in
     opposite directions along the long axis, jaws at the two ends.
+
+--------------------------------------------------------------------------------
+## HOW THE CLUTCH IS HELD - THE ANCHOR SLOT
+
+    A wrap spring only grips because ONE tang is held still while the hub
+    turns underneath it. Without an anchor the spring simply spins with the
+    hub and never tightens. The anchor is a SLOT IN THE HOUSING WALL.
+
+        anchor tang  = helix START, z 31, runs +X, length 24
+                       reaches x 24.0; the bore wall is at x 21.62,
+                       so it lands 2.4 into the slot
+        control tang = helix END,   z 38.5, runs -X, length 16
+                       tip at r 18.52 - inside the bore, free to swing
+
+    Housing constants: ancOn true, ancX 19, ancY 9.33, ancZ 31, ancW 1.9.
+    Take them from the coil script's report, which now prints both tip
+    coordinates.
+
+    TANG DIRECTION MATTERS. At phi0 = 0 the tangs run along Y, straight at
+    the bore WAIST (half-width 13.4), and hit the wall after 9.5 mm - before
+    they have even cleared the collar, which needs 11.3. At phi0 = 90 they
+    run along X toward the LOBES, where the bore reaches 25.4, and there is
+    room for both.
 
 --------------------------------------------------------------------------------
 ## RETURN SPRINGS

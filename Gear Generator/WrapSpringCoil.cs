@@ -53,7 +53,13 @@
     double mu    = 0.30;       // spring on hub. ~0.15 steel/steel oiled, ~0.30 on plastic
     double pHub  = 20.0;       // N/mm2 allowable hub contact pressure (printed plastic)
     double gap   = 0.0;        // axial gap between coils, 0 = close wound
-    double phi0  = 0.0;        // angle of the anchor tang [deg]
+    double phi0  = 90.0;       // 90 puts the tangs on the WAIST, running along X
+                               // toward the LOBES where the bore reaches 25.4.
+                               // At 0 they run at the bore waist and hit the wall
+                               // after 9.5 mm - before they clear the collar.
+    double tlA   = 24.0;       // ANCHOR tang: must reach the slot in the housing
+                               // wall, which sits 21.6 out along X
+    double tlC   = 16.0;       // CONTROL tang: only has to clear the collar (11.3)
     double hand  = 1.0;        // +1 right-hand wind, -1 left-hand
     double zOff  = 31.0;        // slide along the axis, to sit on the hub
 
@@ -113,9 +119,11 @@
     ts.Unitize(); te.Unitize();
 
     PolyCurve rail = new PolyCurve();
-    rail.Append(new LineCurve(ps - ts * tl, ps));      // anchor tang
+    double lenA = tlA > 1e-9 ? tlA : tl;
+    double lenC = tlC > 1e-9 ? tlC : tl;
+    rail.Append(new LineCurve(ps - ts * lenA, ps));    // anchor tang  -> housing slot
     rail.Append(helix);
-    rail.Append(new LineCurve(pe, pe + te * tl));      // control tang
+    rail.Append(new LineCurve(pe, pe + te * lenC));    // control tang -> collar slot
 
     Brep[] pipe = Brep.CreatePipe(rail, 0.5 * d, false, PipeCapMode.Round, true, tol, aTol);
     if (pipe == null || pipe.Length == 0) { Info = "Pipe failed - try fewer coils or a coarser tolerance."; return; }
@@ -147,6 +155,16 @@
                   ",  angle " + angC.ToString("0.#") + " deg  -> to the release collar");
     sb.AppendLine("  SET ON THE COLLAR:  tangAng = " + angC.ToString("0.#") +
                   ",  slotZ = (this z) - (collar zOff)");
+    {
+      Point3d tipA = rail.PointAtStart, tipC = rail.PointAtEnd;
+      sb.AppendLine("  anchor tip  (" + tipA.X.ToString("0.##") + ", " + tipA.Y.ToString("0.##") +
+                    ", " + tipA.Z.ToString("0.##") + ")   r " +
+                    Math.Sqrt(tipA.X * tipA.X + tipA.Y * tipA.Y).ToString("0.##"));
+      sb.AppendLine("  control tip (" + tipC.X.ToString("0.##") + ", " + tipC.Y.ToString("0.##") +
+                    ", " + tipC.Z.ToString("0.##") + ")   r " +
+                    Math.Sqrt(tipC.X * tipC.X + tipC.Y * tipC.Y).ToString("0.##"));
+      sb.AppendLine("  SET ON THE HOUSING: anchor slot at the anchor tip above");
+    }
     sb.AppendLine("  keep the collar clear of z " + zOff.ToString("0.###") +
                   " or it will trap the anchor tang");
     sb.AppendLine("--");
