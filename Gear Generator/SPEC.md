@@ -69,7 +69,7 @@ every other component. Everything then lands coaxial and correctly stacked.
                 turnsO        0
                 starts        2        <- MUST equal PinCount
                 bore          6
-                phi0          0
+                phi0          90       <- MUST equal the sleeve's phi0
                 hand          +1       <- flip if it locks on the push
                 spt           64
                 over          0
@@ -83,11 +83,12 @@ every other component. Everything then lands coaxial and correctly stacked.
                 land between passes 19.1   core radius 7.0 -> max bore 9.0
 
 --------------------------------------------------------------------------------
-## 4. FOLLOWER SLEEVE                              (CamFollowerSleeve)
+## 4. FOLLOWER SLEEVE - oval                       (CamFollowerSleeve)
 
     INPUTS      CamDiameter   18
                 Clearance     0.25
-                OuterDiameter 26
+                WaistDia      26       <- short axis
+                Length        50       <- long axis
                 Height        8
                 GrooveWidth   4
                 GrooveDepth   2
@@ -98,15 +99,25 @@ every other component. Everything then lands coaxial and correctly stacked.
                 lead          80.4     <- from the cam report
                 pinZ          4
                 hand          +1       <- match the cam
-                phi0          0
+                phi0          90       <- pins on the WAIST axis; cam phi0 must match
                 zOff          6 = closed (pushed down)
                               22 = open (up).  Slider this to animate.
                 pinsSeparate  true for the real part (see ASSEMBLY ORDER)
+                pockR/Dia/Dep 18 / 6.6 / 6      <- spring pockets, in the lobes
+                keyN/W/Dep    2 / 6 / 2         <- key grooves, at the lobe tips
 
-    RESULT      pin dia 3.8, ball tip 1.9, ball centre radius 9.0
+    RESULT      oval 50 x 26 x 8, bore 18.5, waist wall 3.75
+                pin dia 3.8, ball tip 1.9, ball centre radius 9.0
                 ball-to-groove-bottom gap 0.10
                 130 N per pin: bearing 17.2 MPa, bending 27 MPa
-                NOTE the sleeve is short; the housing guide must stop it rotating
+
+    WHY OVAL    A spring rising from the base cannot reach a ROUND sleeve:
+                anything clearing the gear (radius 13.68) sits further out
+                than a round sleeve is wide (radius 13). Stretching the body
+                puts material past the gear, and the pockets go there.
+
+    PINS AND POCKETS MUST NOT SHARE AN ANGLE, or the pin shaft breaks into
+    a pocket. Pockets and key grooves on the LONG axis, pins on the WAIST.
 
 --------------------------------------------------------------------------------
 ## 5. SPRING — PURCHASED PART
@@ -233,18 +244,20 @@ every other component. Everything then lands coaxial and correctly stacked.
 --------------------------------------------------------------------------------
 ## RETURN SPRINGS
 
-    A spring rising from the base CANNOT push on the sleeve body: anything
-    clearing the gear (radius 13.68) sits further out than the sleeve is wide
-    (radius 13). So the sleeve grows TABS that reach past the gear.
+    A spring rising from the base CANNOT push on a ROUND sleeve: anything
+    clearing the gear (radius 13.68) sits further out than a round sleeve is
+    wide (radius 13). Stretching the sleeve into an OVAL puts real material
+    past the gear, and the springs go into blind pockets in its lobes.
 
-    Put the tabs at the TOP of the sleeve, not the bottom:
+    Sleeve constants: pockR 18, pockDia 6.6, pockDep 6.
+    The pocket CEILING is the spring seat, 2 mm below the sleeve top. Pocket
+    depth does the job a tab height would:
 
-        tab at the bottom: spring 22 -> 6,  solid length must be under 6
-        tab at the TOP:    spring 28 -> 12, solid length must be under 12
+        pocket 0 deep (flat bottom): spring 22 -> 6,  solid under 6
+        pocket 6 deep:               spring 28 -> 12, solid under 12
 
-    Sleeve constants: tabN 2, tabR 20, tabW 6, tabThk 2, tabTop 0.
-    Tab underside is the spring seat; it travels z 12 (closed) to 28 (open),
-    so the spring works over 16 mm - the stroke.
+    The seat travels z 12 (closed) to 28 (open), so the spring works over
+    16 mm - the stroke.
 
     Springs: 2 off, OD about 6, free length about 30, on the base pins at
     radius 18. They also drive the jaws open, since the 54.9 deg lead angle
