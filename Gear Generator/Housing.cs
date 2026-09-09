@@ -1,35 +1,35 @@
 // ===========================================================================
 //  HOUSING  -  Grasshopper C# component (RhinoCommon)
-//  Oval shell that screws down onto the base plate. Its bore is the sleeve's
-//  stadium plus a running clearance, so the wall stays a uniform thickness
-//  all the way round rather than ballooning at the waist.
+//  Oval shell that screws down onto the base plate.
 //
-//  It does four jobs:
-//     - two internal RIBS at the lobe tips run in the sleeve's key grooves
-//       and stop it rotating
-//     - the oval bore guides the sleeve over its whole travel
-//     - an angular gap lets the release lever swing out
-//     - openings at gear level let the two racks travel out to the jaws
+//  It has a BELLY at gear level. A rack meshes TANGENTIALLY: its pitch line
+//  is tangent to the gear's pitch circle, so it sits 12.18 from the axis and
+//  slides along its own length. Its root line alone reaches 14.06, past the
+//  26.8 bore waist, so the shell has to bulge out over z 0..7 to clear it.
+//  Above that it narrows again to hug the sleeve.
 //
-//  Measured from the gear plane (z = 0). The flange sits on the base plate,
-//  so the housing starts at z = -PlateThk.
+//  ANTI-ROTATION: two ribs at the lobe tips run in the sleeve's key grooves
+//  over the whole of its travel. They sit at y = 0 and the rack openings at
+//  y = +/-13.87, so the two never meet and the ribs can run full height.
+//
+//  Both stadiums share the same overall LENGTH, so their lobe tips line up
+//  at x = +/-25.4 and one rib section serves both levels.
 // ===========================================================================
 
 
 // ===========================================================================
-//  THIS BUILD - 7 inputs to create on the component:
+//  THIS BUILD - 8 inputs to create on the component:
 //     BoreWaist 26.8   BoreLength 50.8   WallThk 2   Height 44
-//     LeverSlotDeg 60  RackSlotW 7       RackSlotH 7
+//     BellyWaist 36    LeverSlotDeg 60   RackSlotW 7   RackSlotH 7
 //     BasePlane <- the RACK script's GearPlane
-//  Bore = the sleeve's 26 x 50 oval + 0.4 clearance all round.
 //  Every constant below is already set for this build.
 // ===========================================================================
 
 // ---------------------------------------------------------------------------
 //  paste into RunScript( ... )
 //    private void RunScript(double BoreWaist, double BoreLength, double WallThk,
-//                           double Height, double LeverSlotDeg, double RackSlotW,
-//                           double RackSlotH, Plane BasePlane,
+//                           double Height, double BellyWaist, double LeverSlotDeg,
+//                           double RackSlotW, double RackSlotH, Plane BasePlane,
 //                           ref object Body, ref object Info)
 // ---------------------------------------------------------------------------
 
@@ -39,90 +39,97 @@
     double Bl = BoreLength   > 1e-9 ? BoreLength   : 50.8;
     double wt = WallThk      > 1e-9 ? WallThk      :  2.0;
     double Hh = Height       > 1e-9 ? Height       : 44.0;
+    double Yw = BellyWaist   > 1e-9 ? BellyWaist   : 36.0;
     double lv = LeverSlotDeg > 1e-9 ? LeverSlotDeg : 60.0;
     double rw = RackSlotW    > 1e-9 ? RackSlotW    :  7.0;
     double rh = RackSlotH    > 1e-9 ? RackSlotH    :  7.0;
 
-    // --- match these to the base plate and the sleeve ------------------------
+    // --- match these to the base plate, sleeve and racks ---------------------
     double plateThk = 2.0;    // housing starts at -2, sitting on the plate
-    double flangeD  = 62.0;   // bottom mounting flange
+    double bellyHi  = 7.0;    // belly runs z -2 .. 7 (gear is z 0..6)
+    double flangeD  = 62.0;
     double flangeT  = 3.0;
 
-    int    scN      = 3;      // screws, matching the base plate
-    double scR      = 28.0;   // screw circle RADIUS
-    double scDia    = 2.5;    // PILOT hole - the plate has the clearance hole
+    int    scN      = 3;
+    double scR      = 28.0;
+    double scDia    = 2.5;    // PILOT - the plate has the clearance hole
     double scPhi    = 90.0;
 
-    int    ribN     = 2;      // anti-rotation ribs, at the lobe tips
+    int    ribN     = 2;      // ANTI-ROTATION ribs, at the lobe tips
     double ribW     = 5.6;    // sleeve key groove 6.0 - 0.4 play
-    double ribDep   = 2.2;    // protrudes into the bore
-    double ribZlo   = 8.0;    // starts above the rack openings
-    double ribZhi   = 32.0;   // sleeve travels z 6..30
+    double ribDep   = 2.2;    // protrudes in from the bore
+    double ribZlo   = 2.0;    // sleeve bottoms out at z 6, so this is early
+    double ribZhi   = 32.0;   // sleeve top reaches z 30
 
     double leverPhi = 90.0;   // on the waist axis, clear of the ribs
-    double leverZlo = 35.0;   // collar sits z 36..40
+    double leverZlo = 35.0;
     double leverZhi = 41.0;
 
-    int    rackN    = 2;      // rack openings at the lobe tips
-    double rackPhi  = 0.0;
-    double rackZlo  = 0.0;    // gear sits z 0..6
+    int    rackN    = 2;      // rack openings - TANGENTIAL, not radial
+    double rackOff  = 13.87;  // centre of the rack's radial span (10.68..17.05)
+    double rackZlo  = 0.0;
 
     double zOff     = 0.0;
 
     double tol = 0.001;
     if (Rhino.RhinoDoc.ActiveDoc != null) tol = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
 
-    double ab = 0.5 * Bw, db = 0.5 * Bl - ab;      // bore stadium
-    double ao = ab + wt;                            // outer stadium, same centres
-    double outLen = 2.0 * (db + ao), outWid = 2.0 * ao;
+    double ab = 0.5 * Bw,  db = 0.5 * Bl - ab;      // upper bore stadium
+    double ao = ab + wt;
+    double yb = 0.5 * Yw,  dy = 0.5 * Bl - yb;      // belly bore stadium, same LENGTH
+    double yo = yb + wt;
     double zBot = -plateThk;
+    double lobeB = db + ab;                          // = dy + yb, shared lobe tip
 
     // ---------- checks -------------------------------------------------------
-    if (db <= 0.0) { Info = "BoreLength must exceed BoreWaist."; return; }
-    if (flangeD < outLen) log.Add("Flange (" + flangeD.ToString("0.#") +
-        ") is smaller than the shell length (" + outLen.ToString("0.#") + ").");
-    if (scR - 0.5 * scDia < 0.5 * outLen)
-      log.Add("Screw circle overlaps the shell - push scR out past " +
-              (0.5 * outLen + 0.5 * scDia + 1.0).ToString("0.##") + ".");
-    if (scR + 0.5 * scDia > 0.5 * flangeD) log.Add("Screw circle runs off the flange.");
+    if (db <= 0.0 || dy <= 0.0) { Info = "BoreLength must exceed both waists."; return; }
+    if (Yw <= Bw) log.Add("BellyWaist is no wider than the bore - the racks will not clear.");
+    if (rackOff + 0.5 * rw > yb)
+      log.Add("Rack needs " + (rackOff + 0.5 * rw).ToString("0.##") +
+              " of half-width but the belly bore only gives " + yb.ToString("0.##") +
+              " - widen BellyWaist to " + (2.0 * (rackOff + 0.5 * rw + 1.0)).ToString("0.#") + ".");
     if (ribZhi > Hh || leverZhi > Hh) log.Add("A feature runs past the top of the housing.");
-    if (ribZlo < rackZlo + rh) log.Add("Ribs start inside the rack openings - raise ribZlo.");
+    if (rackOff - 0.5 * rw < 0.5 * ribW)
+      log.Add("Rack opening overlaps the rib at the lobe tip.");
+    if (flangeD < 2.0 * (dy + yo)) log.Add("Flange is smaller than the belly.");
 
-    // ---------- oval shell ---------------------------------------------------
-    PolyCurve outer = new PolyCurve();
-    outer.Append(new ArcCurve(new Arc(new Point3d(db, -ao, zBot), new Point3d(db + ao, 0, zBot),
-                                      new Point3d(db, ao, zBot))));
-    outer.Append(new LineCurve(new Point3d(db, ao, zBot), new Point3d(-db, ao, zBot)));
-    outer.Append(new ArcCurve(new Arc(new Point3d(-db, ao, zBot), new Point3d(-db - ao, 0, zBot),
-                                      new Point3d(-db, -ao, zBot))));
-    outer.Append(new LineCurve(new Point3d(-db, -ao, zBot), new Point3d(db, -ao, zBot)));
-    outer.MakeClosed(tol);
+    // ---------- stadium helper -----------------------------------------------
+    Func<double, double, double, Curve> stad = delegate(double aa, double dd, double zz)
+    {
+      PolyCurve p = new PolyCurve();
+      p.Append(new ArcCurve(new Arc(new Point3d(dd, -aa, zz), new Point3d(dd + aa, 0, zz),
+                                    new Point3d(dd, aa, zz))));
+      p.Append(new LineCurve(new Point3d(dd, aa, zz), new Point3d(-dd, aa, zz)));
+      p.Append(new ArcCurve(new Arc(new Point3d(-dd, aa, zz), new Point3d(-dd - aa, 0, zz),
+                                    new Point3d(-dd, -aa, zz))));
+      p.Append(new LineCurve(new Point3d(-dd, -aa, zz), new Point3d(dd, -aa, zz)));
+      p.MakeClosed(tol);
+      return p;
+    };
 
-    Extrusion exO = Extrusion.Create(outer, Hh - zBot, true);
-    if (exO == null) { Info = "Could not extrude the shell."; return; }
-    Brep shell = exO.ToBrep();
-    if (shell.SolidOrientation == BrepSolidOrientation.Inward) shell.Flip();
+    // ---------- shell: upper section + belly + flange + ribs ------------------
+    Extrusion exU = Extrusion.Create(stad(ao, db, bellyHi), Hh - bellyHi, true);
+    Extrusion exY = Extrusion.Create(stad(yo, dy, zBot), bellyHi - zBot, true);
+    if (exU == null || exY == null) { Info = "Could not extrude the shell."; return; }
 
-    Brep flange = new Cylinder(new Circle(new Plane(new Point3d(0, 0, zBot), Vector3d.ZAxis),
-                                          0.5 * flangeD), flangeT).ToBrep(true, true);
-    if (flange.SolidOrientation == BrepSolidOrientation.Inward) flange.Flip();
-
-    // ribs are added material, so they join the union
     List<Brep> add = new List<Brep>();
-    add.Add(shell); add.Add(flange);
-    double lobeB = db + ab;
+    add.Add(exU.ToBrep());
+    add.Add(exY.ToBrep());
+    add.Add(new Cylinder(new Circle(new Plane(new Point3d(0, 0, zBot), Vector3d.ZAxis),
+                                    0.5 * flangeD), flangeT).ToBrep(true, true));
     for (int i = 0; i < ribN; i++)
     {
-      double ang = RhinoMath.ToRadians(rackPhi) + 2.0 * Math.PI * i / ribN;
+      double ang = 2.0 * Math.PI * i / ribN;           // lobe tips, 0 and 180
       Vector3d rad = new Vector3d(Math.Cos(ang), Math.Sin(ang), 0.0);
       Vector3d tng = Vector3d.CrossProduct(Vector3d.ZAxis, rad); tng.Unitize();
-      Plane rp2 = new Plane(Point3d.Origin, rad, tng);
-      add.Add(new Box(rp2, new Interval(lobeB - ribDep, lobeB + wt),
-                           new Interval(-0.5 * ribW, 0.5 * ribW),
-                           new Interval(ribZlo, ribZhi)).ToBrep());
+      add.Add(new Box(new Plane(Point3d.Origin, rad, tng),
+                      new Interval(lobeB - ribDep, lobeB + wt),
+                      new Interval(-0.5 * ribW, 0.5 * ribW),
+                      new Interval(ribZlo, ribZhi)).ToBrep());
     }
+    foreach (Brep b in add) if (b.SolidOrientation == BrepSolidOrientation.Inward) b.Flip();
 
-    Brep body = shell;
+    Brep body = add[0];
     Brep[] uni = Brep.CreateBooleanUnion(add, tol);
     string uniState;
     if (uni != null && uni.Length > 0)
@@ -131,22 +138,16 @@
       foreach (Brep b in uni) { double v = b.GetBoundingBox(true).Volume; if (v > bv) { bv = v; best = b; } }
       body = best; uniState = "OK";
     }
-    else { uniState = "FAILED"; log.Add("Shell / flange / rib union failed."); }
+    else { uniState = "FAILED"; log.Add("Shell union failed."); }
 
-    // ---------- everything cut away ------------------------------------------
+    // ---------- cuts ---------------------------------------------------------
     List<Brep> cut = new List<Brep>();
 
-    PolyCurve bore = new PolyCurve();
-    bore.Append(new ArcCurve(new Arc(new Point3d(db, -ab, zBot - 1.0), new Point3d(db + ab, 0, zBot - 1.0),
-                                     new Point3d(db, ab, zBot - 1.0))));
-    bore.Append(new LineCurve(new Point3d(db, ab, zBot - 1.0), new Point3d(-db, ab, zBot - 1.0)));
-    bore.Append(new ArcCurve(new Arc(new Point3d(-db, ab, zBot - 1.0), new Point3d(-db - ab, 0, zBot - 1.0),
-                                     new Point3d(-db, -ab, zBot - 1.0))));
-    bore.Append(new LineCurve(new Point3d(-db, -ab, zBot - 1.0), new Point3d(db, -ab, zBot - 1.0)));
-    bore.MakeClosed(tol);
-    Extrusion exB = Extrusion.Create(bore, Hh - zBot + 2.0, true);
-    if (exB == null) { Info = "Could not extrude the bore."; return; }
-    cut.Add(exB.ToBrep());
+    // upper bore over the full height, then the wider belly bore on top of it
+    Extrusion bU = Extrusion.Create(stad(ab, db, zBot - 1.0), Hh - zBot + 2.0, true);
+    Extrusion bY = Extrusion.Create(stad(yb, dy, zBot - 1.0), bellyHi - zBot + 1.0, true);
+    if (bU == null || bY == null) { Info = "Could not extrude the bore."; return; }
+    cut.Add(bU.ToBrep()); cut.Add(bY.ToBrep());
 
     for (int i = 0; i < scN; i++)
     {
@@ -156,21 +157,24 @@
               .ToBrep(true, true));
     }
 
+    // rack openings: boxes running ALONG the rack, offset from the axis.
+    // rack i exits the opposite end, so the pair sits diagonally.
     for (int i = 0; i < rackN; i++)
     {
-      double a2 = RhinoMath.ToRadians(rackPhi) + 2.0 * Math.PI * i / rackN;
-      Vector3d rad = new Vector3d(Math.Cos(a2), Math.Sin(a2), 0.0);
-      Vector3d tng = Vector3d.CrossProduct(Vector3d.ZAxis, rad); tng.Unitize();
-      Plane bp2 = new Plane(Point3d.Origin, rad, tng);
-      cut.Add(new Box(bp2, new Interval(lobeB - 1.0, 0.5 * flangeD + 2.0),
-                           new Interval(-0.5 * rw, 0.5 * rw),
-                           new Interval(rackZlo, rackZlo + rh)).ToBrep());
+      double sgn = i == 0 ? 1.0 : -1.0;
+      double y0  = sgn * rackOff;
+      double xLo = sgn > 0 ? 0.0 : -(0.5 * flangeD + 4.0);
+      double xHi = sgn > 0 ? (0.5 * flangeD + 4.0) : 0.0;
+      cut.Add(new Box(Plane.WorldXY,
+                      new Interval(xLo, xHi),
+                      new Interval(y0 - 0.5 * rw, y0 + 0.5 * rw),
+                      new Interval(rackZlo, rackZlo + rh)).ToBrep());
     }
 
     {
       double a1 = RhinoMath.ToRadians(leverPhi - 0.5 * lv);
       double a2 = RhinoMath.ToRadians(leverPhi + 0.5 * lv);
-      double Rc = 0.5 * outLen + 2.0;
+      double Rc = db + ao + 2.0;
       Circle c = new Circle(new Plane(new Point3d(0, 0, leverZlo), Vector3d.ZAxis), Rc);
       Arc arc = new Arc(c, new Interval(a1, a2));
       PolyCurve pc = new PolyCurve();
@@ -200,20 +204,26 @@
 
     // ---------- report -------------------------------------------------------
     System.Text.StringBuilder sb = new System.Text.StringBuilder();
-    sb.AppendLine("bore  (oval)        " + Bl.ToString("0.###") + " x " + Bw.ToString("0.###"));
-    sb.AppendLine("outer (oval)        " + outLen.ToString("0.###") + " x " + outWid.ToString("0.###") +
-                  ",  uniform wall " + wt.ToString("0.###"));
-    sb.AppendLine("                    z " + zBot.ToString("0.##") + " .. " + Hh.ToString("0.##"));
+    sb.AppendLine("upper  z " + bellyHi.ToString("0.##") + " .. " + Hh.ToString("0.##") +
+                  "   bore " + Bl.ToString("0.###") + " x " + Bw.ToString("0.###") +
+                  ",  outer " + (2.0 * (db + ao)).ToString("0.###") + " x " + (2.0 * ao).ToString("0.###"));
+    sb.AppendLine("belly  z " + zBot.ToString("0.##") + " .. " + bellyHi.ToString("0.##") +
+                  "   bore " + Bl.ToString("0.###") + " x " + Yw.ToString("0.###") +
+                  ",  outer " + (2.0 * (dy + yo)).ToString("0.###") + " x " + (2.0 * yo).ToString("0.###"));
+    sb.AppendLine("  both stadiums share the length, so the lobe tips line up at +/-" +
+                  lobeB.ToString("0.##"));
     sb.AppendLine("flange              dia " + flangeD.ToString("0.###") + " x " + flangeT.ToString("0.###") +
                   ",  " + scN + " pilot holes dia " + scDia.ToString("0.###") + " at radius " + scR.ToString("0.###"));
     sb.AppendLine("--");
-    sb.AppendLine("ribs                " + ribN + " x " + ribW.ToString("0.###") + " wide x " +
-                  ribDep.ToString("0.###") + " proud, z " + ribZlo.ToString("0.##") + " .. " + ribZhi.ToString("0.##"));
-    sb.AppendLine("   they run in the sleeve's key grooves - that is the anti-rotation");
+    sb.AppendLine("ANTI-ROTATION       " + ribN + " ribs at the lobe tips, " + ribW.ToString("0.###") +
+                  " wide x " + ribDep.ToString("0.###") + " proud");
+    sb.AppendLine("                    z " + ribZlo.ToString("0.##") + " .. " + ribZhi.ToString("0.##") +
+                  "  (sleeve travels 6..30, so it is keyed throughout)");
+    sb.AppendLine("rack openings       " + rackN + " TANGENTIAL, offset +/-" + rackOff.ToString("0.##") +
+                  " from the axis, " + rw.ToString("0.###") + " x " + rh.ToString("0.###"));
+    sb.AppendLine("                    one exits each end - they sit diagonally, not opposed");
     sb.AppendLine("lever gap           " + lv.ToString("0.#") + " deg at " + leverPhi.ToString("0.#") +
                   " deg, z " + leverZlo.ToString("0.##") + " .. " + leverZhi.ToString("0.##"));
-    sb.AppendLine("rack openings       " + rackN + " x " + rw.ToString("0.###") + " wide x " +
-                  rh.ToString("0.###") + " tall, z " + rackZlo.ToString("0.##"));
     sb.AppendLine("--");
     sb.AppendLine("DIAGNOSTICS");
     sb.AppendLine("  shell union       " + uniState);

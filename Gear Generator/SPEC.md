@@ -210,36 +210,68 @@ every other component. Everything then lands coaxial and correctly stacked.
                 springs at radius 18 clear the gear (radius 13.68) by 1.32
 
 --------------------------------------------------------------------------------
-## 10. HOUSING - oval                               (Housing.cs)
+## 10. HOUSING - oval, with a belly                (Housing.cs)
 
     INPUTS      BoreWaist     26.8     <- sleeve 26 + 0.4 clearance each side
                 BoreLength    50.8     <- sleeve 50 + 0.4
                 WallThk       2
                 Height        44
+                BellyWaist    36       <- widened at gear level to clear the racks
                 LeverSlotDeg  60
                 RackSlotW     7
                 RackSlotH     7
                 BasePlane     <- rack GearPlane
-    CONSTANTS   plateThk      2        <- housing starts at -2, on the plate
+    CONSTANTS   plateThk      2
+                bellyHi       7        <- belly spans z -2 .. 7
                 flangeD/T     62 / 3
                 scN/scR/scDia 3 / 28 / 2.5   <- PILOT holes
                 ribN          2
                 ribW          5.6      <- sleeve key groove 6.0 - 0.4 play
                 ribDep        2.2
-                ribZlo/Zhi    8 / 32   <- 8 keeps it clear of the rack openings
+                ribZlo/Zhi    2 / 32   <- sleeve travels 6..30, keyed throughout
                 leverPhi      90
-                leverZlo/Zhi  35 / 41  <- collar sits 36..40
+                leverZlo/Zhi  35 / 41
                 rackN         2
-                rackZlo       0        <- gear sits 0..6
+                rackOff       13.87    <- centre of the rack's radial span
+                rackZlo       0
 
-    RESULT      bore 50.8 x 26.8, outer 54.8 x 30.8, flange 62.
-                The bore follows the sleeve's stadium so the wall stays a
-                uniform 2 mm - a round bore big enough for a 50 mm oval
-                would leave a 12 mm wall at the waist.
+    RESULT      upper  z 7..44   bore 50.8 x 26.8,  outer 54.8 x 30.8
+                belly  z -2..7   bore 50.8 x 36.0,  outer 54.8 x 40.0
+                Both stadiums share the LENGTH, so the lobe tips line up at
+                +/-25.4 and one rib section serves both levels.
 
-    THE BOTTOM CUTOUTS are the RACK OPENINGS: 7 x 7, at the lobe tips
-    (0 and 180 deg), z 0..7. The racks sit at gear level and travel out
-    along the long axis to reach the jaws, so they must break the wall.
+    ANTI-ROTATION is the two RIBS at the lobe tips, running in the sleeve's
+    key grooves from z 2 to 32 - the sleeve is keyed over its whole travel.
+
+--------------------------------------------------------------------------------
+## RACKS - THEY MESH TANGENTIALLY
+
+    This is easy to get wrong. A rack's pitch line is TANGENT to the gear's
+    pitch circle, so it sits at a perpendicular offset of
+
+        rp + x*m = 12 + 0.18 = 12.18
+
+    from the gear axis, and slides along its OWN LENGTH. It never passes near
+    the axis, so a radial opening is the wrong shape in the wrong place.
+
+    Rack body, measured perpendicular from the axis:
+
+        tip line   10.68   (closest approach to the axis)
+        datum      12.18
+        root line  14.06
+        back face  17.05   (with body depth bh = 3)
+
+    The root line ALONE is past the 13.40 bore waist, so no amount of thinning
+    the rack makes it fit the upper section. Hence the belly: 36 wide over
+    z 0..7 gives 0.95 of clearance behind the rack.
+
+    OPENINGS are tangential boxes offset +/-13.87 from the axis, 7 x 7, one
+    running out each end - so they sit DIAGONALLY, not diametrically opposed.
+    They are at y +/-10.37..17.37 while the ribs are at y +/-2.80, so the two
+    never meet.
+
+    Assumed layout: two parallel racks either side of the gear, moving in
+    opposite directions along the long axis, jaws at the two ends.
 
 --------------------------------------------------------------------------------
 ## RETURN SPRINGS
