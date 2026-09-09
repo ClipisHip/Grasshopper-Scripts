@@ -67,7 +67,12 @@
     double pinZ   = 4.0;          // first pin height above the base, 0 -> Height/2
     double hand   = 1.0;          // +1 right-hand, must match the cam
     double phi0   = 0.0;          // angle of the first pin [deg]
-    double zOff   = 22.0;          // slide the sleeve along the axis
+    double zOff   = 22.0;         // travel: 6 = closed (down), 22 = open (up)
+    bool   pinsSeparate = false;  // true = press-in pins: the sleeve gets radial
+                                  // holes and the pins come out on their own.
+                                  // REQUIRED for assembly - the pins reach in to
+                                  // radius 7.10 and would foul the 8.575 hub if
+                                  // they were moulded in.          // slide the sleeve along the axis
 
     double tol = 0.001;
     if (Rhino.RhinoDoc.ActiveDoc != null) tol = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
@@ -142,19 +147,37 @@
     }
 
     // ---------- union it all -------------------------------------------------
-    List<Brep> all = new List<Brep>();
-    all.Add(sleeve);
-    all.AddRange(pins);
     Brep body = sleeve;
     string uniState;
-    Brep[] uni = Brep.CreateBooleanUnion(all, tol);
+    Brep[] uni;
+    if (pinsSeparate)
+    {
+      // bore the radial holes, leave the pins as loose parts
+      List<Brep> holes = new List<Brep>();
+      for (int i = 0; i < np; i++)
+      {
+        Vector3d rad = new Vector3d(Math.Cos(pa[i]), Math.Sin(pa[i]), 0.0);
+        Point3d  bc  = new Point3d(rad.X * rcen, rad.Y * rcen, pz[i]);
+        holes.Add(new Cylinder(new Circle(new Plane(bc, rad), rp), Ro - rcen + 1.0)
+                  .ToBrep(true, true));
+      }
+      uni = Brep.CreateBooleanDifference(new Brep[] { sleeve }, holes, tol);
+    }
+    else
+    {
+      List<Brep> all = new List<Brep>();
+      all.Add(sleeve);
+      all.AddRange(pins);
+      uni = Brep.CreateBooleanUnion(all, tol);
+    }
     if (uni != null && uni.Length > 0)
     {
       Brep best = uni[0]; double bv = -1.0;
       foreach (Brep b in uni)
       { double v = b.GetBoundingBox(true).Volume; if (v > bv) { bv = v; best = b; } }
       body = best;
-      uniState = "OK (" + uni.Length + " piece" + (uni.Length == 1 ? ")" : "s, kept the largest)");
+      uniState = (pinsSeparate ? "holes bored, pins loose" : "pins unioned") +
+                 " - OK (" + uni.Length + " piece" + (uni.Length == 1 ? ")" : "s, kept the largest)");
     }
     else
     {

@@ -75,10 +75,10 @@ every other component. Everything then lands coaxial and correctly stacked.
                 over          0
                 botR          0        <- 0 = full U
                 pinClr        0.2
-                endOverTop    5        <- breaks out on top so the sleeve slides on
-                endOverBot    3        <- clears the ball at the blind bottom end
+                endOverTop    0        <- pipe cutter has round ends, none needed
+                endOverBot    0        <- same
 
-    RESULT      body z 6..30, groove z 7..31 (pin centre travels 10..26)
+    RESULT      body z 6..30, groove z 10..26, blind with hemispherical ends
                 turns 0.1989 (71.6 deg)   lead 80.4   lead angle 54.9 deg
                 land between passes 19.1   core radius 7.0 -> max bore 9.0
 
@@ -101,6 +101,7 @@ every other component. Everything then lands coaxial and correctly stacked.
                 phi0          0
                 zOff          6 = closed (pushed down)
                               22 = open (up).  Slider this to animate.
+                pinsSeparate  true for the real part (see ASSEMBLY ORDER)
 
     RESULT      pin dia 3.8, ball tip 1.9, ball centre radius 9.0
                 ball-to-groove-bottom gap 0.10
@@ -232,30 +233,42 @@ every other component. Everything then lands coaxial and correctly stacked.
 --------------------------------------------------------------------------------
 ## ASSEMBLY ORDER
 
-    1. rotor (one piece: gear + cam + hub)
-    2. sleeve  - drops down from the top; bore 18.5 clears the hub 17.15 and
-                 the cam 18.0
-    3. spring  - wound down onto the hub from the top (free ID 17.0 on a 17.15
+    1. rotor   - one piece: gear + cam + hub
+    2. sleeve  - WITHOUT pins, drops down from the top. Its bore radius 9.25
+                 clears the hub radius 8.575 by 0.675.
+    3. pins    - pressed in radially through the sleeve wall into the groove.
+    4. spring  - wound down onto the hub from the top (free ID 17.0 on a 17.15
                  hub, so twist to expand it as it goes on)
-    4. collar  - drops down from the top; bore 20.95 clears the hub and the
+    5. collar  - drops down from the top; bore 20.95 clears the hub and the
                  spring OD 20.15, and the open notch passes the tang
-    5. cap     - traps the collar axially, still free to rotate
+    6. cap     - traps the collar axially, still free to rotate
 
-    The tang is the ONLY thing that blocks the collar: its tip sits at radius
+    WHY THE PINS GO IN LAST. A ball pin reaches inward to radius 7.10, but the
+    spring hub is radius 8.575. A sleeve with the pins already in it cannot be
+    passed over the hub - it fouls by 1.475 mm. This is the same undercut that
+    stops the pins being moulded into the sleeve anyway, so press-in dowels
+    solve both problems at once (and metal dowels take the load better).
+
+    The tang is the only thing blocking the COLLAR: its tip sits at radius
     18.52, which is 5.04 mm outside the collar's 13.47 OD radius. Hence the
     open notch.
 
 --------------------------------------------------------------------------------
-## GROOVE END CLEARANCE
+## GROOVE CUTTER
 
-    The cutter is a loft with FLAT end caps. The pin's ball reaches 1.9 mm past
-    the pin centre, so if the groove stops where the pin centre stops, the ball
-    punches through the end face.
+    A ball-nose pin sweeping the path carves exactly a PIPE of radius gw/2
+    centred on the skin: gw wide, gw/2 deep, hemispherical ends. When the
+    groove is a full U (gd = gw/2, botR 0) the script pipes it as one
+    primitive rather than lofting sections.
 
-        endOverBot must exceed the ball radius (1.9).  Set to 3.
-        groove bottom moves to local 1.0 / world 7.0, still blind inside the
-        body, and the pin centre still stops at world 10 when the sleeve
-        lands on the gear.
+        pipe radius 2.0 on the skin at radius 9.0
+        cuts radius 7.0 .. 11.0  ->  2 deep, 2 proud (its own overshoot)
+        end cap is a hemisphere r 2.0; the r 1.9 ball nests with 0.10 clearance
+
+    So no end extension is needed and no flat end face is left sitting a
+    fraction of a millimetre inside the blank - which is what was breaking the
+    geometry. endOverTop / endOverBot are both 0 and only apply to the loft
+    path, which is still used for grooves deeper than half their width.
 
 --------------------------------------------------------------------------------
 ## TANG / SLOT ALIGNMENT

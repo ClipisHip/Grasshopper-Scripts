@@ -73,10 +73,10 @@
     double botR   = 0.0;          // groove bottom corner radius.  0 -> GrooveWidth/2,
                                   // i.e. a full U that a ball-nose pin seats in
     double pinClr = 0.2;          // pin-to-groove clearance, for the report
-    double endOverTop = 5.0;     // axial overshoot past the TOP of the cylinder, so the
+    double endOverTop = 0.0;     // axial overshoot past the TOP of the cylinder, so the
                                   // groove breaks out and the sleeve threads on from above.
                                   // <0 = auto (one groove width when Stroke = 0, else 0)
-    double endOverBot = 3.0;      // overshoot past the BOTTOM.  Keep this small when the
+    double endOverBot = 0.0;      // overshoot past the BOTTOM.  Keep this small when the
                                   // cam is fused to a gear below - it notches the gear face.
 
     double tol = 0.001;
@@ -122,6 +122,14 @@
     // The bottom is rounded so a ball-nose pin cannot wedge into a corner.
     double rw = 0.5 * gw;
     double q  = botR > 1e-9 ? botR : rw;      // 0 -> full semicircle
+
+    // A ball-nose pin sweeping the path carves exactly a PIPE of radius gw/2
+    // centred on the skin: gw wide, gw/2 deep, with hemispherical ends. When
+    // the groove is a full U that is what we want, and one pipe primitive is
+    // far more robust than lofting sections - it also gives the ball its end
+    // clearance for free, so no overshoot is needed and no flat end face is
+    // left sitting a fraction of a millimetre inside the blank.
+    bool fullU = Math.Abs(gd - rw) < 1e-6 && botR <= 1e-9;
     if (q > rw) q = rw;
     if (q > gd) q = gd;
     int    nq = 8;                            // points per bottom corner
@@ -153,8 +161,8 @@
     double z0   = margin + 0.5 * ((H - 2.0 * margin) - S);   // centre a short stroke
     double k    = hand * 2.0 * Math.PI * turns;
 
-    // extend the cutter past both ends of the cylinder: a groove that stops
-    // inside the blank leaves a sliver face and traps the pin at the top
+    // overshoot past the ends. Only needed for the LOFT path (flat end caps);
+    // the pipe path's round caps already clear the ball.
     double eoT = endOverTop >= 0.0 ? endOverTop : (Stroke <= 1e-9 ? gw : 0.0);
     double eoB = endOverBot >= 0.0 ? endOverBot : (Stroke <= 1e-9 ? gw : 0.0);
     double uLo = -eoB / S, uHi = 1.0 + eoT / S;
@@ -192,14 +200,26 @@
         sect.Add(new Polyline(sp).ToPolylineCurve());
       }
 
-      Brep[] lofts = Brep.CreateFromLoft(sect, Point3d.Unset, Point3d.Unset, LoftType.Straight, false);
-      if (lofts == null || lofts.Length == 0) { Info = "Could not loft the groove cutter."; return; }
-      Brep gb = lofts[0];
-      if (lofts.Length > 1)
-      { Brep[] j = Brep.JoinBreps(lofts, tol); if (j != null && j.Length > 0) gb = j[0]; }
-
-      Brep capped = gb.CapPlanarHoles(tol);
-      if (capped != null) gb = capped;
+      Brep gb;
+      if (fullU)
+      {
+        Curve rail = Curve.CreateInterpolatedCurve(mid, 3);
+        Brep[] pipe = Brep.CreatePipe(rail, rw, false, PipeCapMode.Round, true, tol, 0.01);
+        if (pipe == null || pipe.Length == 0) { Info = "Could not pipe the groove cutter."; return; }
+        gb = pipe[0];
+        if (pipe.Length > 1)
+        { Brep[] j = Brep.JoinBreps(pipe, tol); if (j != null && j.Length > 0) gb = j[0]; }
+      }
+      else
+      {
+        Brep[] lofts = Brep.CreateFromLoft(sect, Point3d.Unset, Point3d.Unset, LoftType.Straight, false);
+        if (lofts == null || lofts.Length == 0) { Info = "Could not loft the groove cutter."; return; }
+        gb = lofts[0];
+        if (lofts.Length > 1)
+        { Brep[] j = Brep.JoinBreps(lofts, tol); if (j != null && j.Length > 0) gb = j[0]; }
+        Brep capped = gb.CapPlanarHoles(tol);
+        if (capped != null) gb = capped;
+      }
 
       // a lofted tube can come out inside-out; an inverted cutter makes the
       // boolean keep the groove and throw away the cylinder
@@ -272,6 +292,8 @@
     sb.AppendLine("lead (rise/turn)    " + lead.ToString("0.###"));
     sb.AppendLine("lead angle          " + RhinoMath.ToDegrees(lam).ToString("0.##") + " deg from horizontal");
     sb.AppendLine("land between passes " + land.ToString("0.###"));
+    sb.AppendLine("cutter              " + (fullU ? "PIPE, hemispherical ends (no overshoot needed)"
+                                                   : "loft, flat ends (overshoot required)"));
     sb.AppendLine("groove overshoot    " + eoB.ToString("0.###") + " below, " +
                   eoT.ToString("0.###") + " above" +
                   (eoT > 1e-9 ? "   (breaks out on top - sleeve can slide on)" : "   (blind top)"));
