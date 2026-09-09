@@ -26,6 +26,7 @@
 //  THIS BUILD - set on the component:
 //     CoilMeanDia 18.65   WireDia 1.5   Clearance 0.4
 //     WallThk 2   Height 4   LeverLength 25   LeverWidth 8
+//  tangAng below is 90, matching the coil's phi0 - at 0 the slot misses.
 //  WallThk 2 not 3: the housing's oval bore is only 26.8 across its waist,
 //  and a 3 mm wall puts the collar at 26.95 - just wide enough to clash.
 //     BasePlane <- the RACK script's GearPlane
@@ -52,7 +53,8 @@
 
     // --- extras --------------------------------------------------------------
     double slotFit  = 0.3;    // slop around the wire in the slot
-    double tangAng  = 0.0;    // where the control tang leaves the coil [deg]
+    double tangAng  = 90.0;   // where the control tang leaves the coil [deg]
+                              // MUST equal the coil's phi0, which is now 90
     double leverAng = 90.0;   // lever direction [deg]
     double slotZ    = 2.5;    // slot height above the collar base, 0 -> Height/2
     double zOff     = 36.0;    // slide along the axis, to sit level with the spring

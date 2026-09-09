@@ -183,6 +183,7 @@ every other component. Everything then lands coaxial and correctly stacked.
     CONSTANTS   slotFit       0.3
                 tangAng       0
                 leverAng      90
+                tangAng       90       <- MUST equal the coil's phi0
                 slotZ         2.5      <- puts the slot at z 38.5 = the control tang
                 zOff          36       <- spans 36..40
                 openTop       true     <- notch open to the top edge, so the collar
@@ -232,6 +233,7 @@ every other component. Everything then lands coaxial and correctly stacked.
                 ribW          5.6      <- sleeve key groove 6.0 - 0.4 play
                 ribDep        2.2
                 ribZlo/Zhi    2 / 32   <- sleeve travels 6..30, keyed throughout
+                ancOn/X/Y/Z/W true / 19 / 9.33 / 31 / 1.9   <- clutch anchor slot
                 leverPhi      90
                 leverZlo/Zhi  35 / 41
                 rackN         2
@@ -245,6 +247,10 @@ every other component. Everything then lands coaxial and correctly stacked.
 
     ANTI-ROTATION is the two RIBS at the lobe tips, running in the sleeve's
     key grooves from z 2 to 32 - the sleeve is keyed over its whole travel.
+
+    RIB BUILD ORDER MATTERS. They stand proud INTO the bore, so they are
+    unioned AFTER the bore is cut. Union them first and the bore cut simply
+    swallows them again and the sleeve is left free to spin.
 
 --------------------------------------------------------------------------------
 ## RACKS - THEY MESH TANGENTIALLY

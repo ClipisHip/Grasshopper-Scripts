@@ -128,16 +128,9 @@
     add.Add(exY.ToBrep());
     add.Add(new Cylinder(new Circle(new Plane(new Point3d(0, 0, zBot), Vector3d.ZAxis),
                                     0.5 * flangeD), flangeT).ToBrep(true, true));
-    for (int i = 0; i < ribN; i++)
-    {
-      double ang = 2.0 * Math.PI * i / ribN;           // lobe tips, 0 and 180
-      Vector3d rad = new Vector3d(Math.Cos(ang), Math.Sin(ang), 0.0);
-      Vector3d tng = Vector3d.CrossProduct(Vector3d.ZAxis, rad); tng.Unitize();
-      add.Add(new Box(new Plane(Point3d.Origin, rad, tng),
-                      new Interval(lobeB - ribDep, lobeB + wt),
-                      new Interval(-0.5 * ribW, 0.5 * ribW),
-                      new Interval(ribZlo, ribZhi)).ToBrep());
-    }
+    // NB the ribs are NOT added here. They protrude INTO the bore, so if they
+    // were unioned before the bore is cut the bore would swallow them again.
+    // They go on after the cuts, further down.
     foreach (Brep b in add) if (b.SolidOrientation == BrepSolidOrientation.Inward) b.Flip();
 
     Brep body = add[0];
@@ -215,6 +208,37 @@
     }
     else { cutState = "FAILED"; log.Add("Bore / opening boolean failed."); }
 
+    // ---------- ribs, AFTER the bore ----------------------------------------
+    // They stand proud into the bore, so they have to be added once the bore
+    // has been taken out - otherwise the bore cut removes them again.
+    string ribState = "none";
+    if (ribN > 0)
+    {
+      List<Brep> ribs = new List<Brep>();
+      ribs.Add(body);
+      for (int i = 0; i < ribN; i++)
+      {
+        double ang = 2.0 * Math.PI * i / ribN;           // lobe tips, 0 and 180
+        Vector3d rad = new Vector3d(Math.Cos(ang), Math.Sin(ang), 0.0);
+        Vector3d tng = Vector3d.CrossProduct(Vector3d.ZAxis, rad); tng.Unitize();
+        Brep rb = new Box(new Plane(Point3d.Origin, rad, tng),
+                          new Interval(lobeB - ribDep, lobeB + wt),
+                          new Interval(-0.5 * ribW, 0.5 * ribW),
+                          new Interval(ribZlo, ribZhi)).ToBrep();
+        if (rb.SolidOrientation == BrepSolidOrientation.Inward) rb.Flip();
+        ribs.Add(rb);
+      }
+      Brep[] ru = Brep.CreateBooleanUnion(ribs, tol);
+      if (ru != null && ru.Length > 0)
+      {
+        Brep best = ru[0]; double bv = -1.0;
+        foreach (Brep b in ru) { double v = b.GetBoundingBox(true).Volume; if (v > bv) { bv = v; best = b; } }
+        body = best;
+        ribState = "OK (" + ribN + " added after the bore)";
+      }
+      else { ribState = "FAILED"; log.Add("Rib union failed - the sleeve will be free to spin."); }
+    }
+
     Plane bp = BasePlane.IsValid ? BasePlane : Plane.WorldXY;
     bp.Origin = bp.Origin + bp.ZAxis * zOff;
     body.Transform(Transform.PlaneToPlane(Plane.WorldXY, bp));
@@ -248,6 +272,7 @@
     sb.AppendLine("DIAGNOSTICS");
     sb.AppendLine("  shell union       " + uniState);
     sb.AppendLine("  bore / openings   " + cutState);
+    sb.AppendLine("  ribs              " + ribState);
     sb.AppendLine("  body solid        " + body.IsSolid);
     if (log.Count > 0) { sb.AppendLine("--"); foreach (string t in log) sb.AppendLine("! " + t); }
 
