@@ -52,7 +52,7 @@
     double zOff   = 0.0;          // slide the cylinder along the gear axis.
                                   //   0        = base sits on the gear plane
                                   //   -0.5*H   = cylinder centred on the gear
-    double margin = 0.0;          // groove inset from each end of the cylinder
+    double margin = 4.0;          // groove inset from each end of the cylinder
     double turnsO = 0.0;          // > 0 overrides the rack-derived turn count
     int    starts = 1;            // grooves around the cylinder (2 = balanced pin load)
     double bore   = 0.0;          // central hole diameter, 0 = solid
