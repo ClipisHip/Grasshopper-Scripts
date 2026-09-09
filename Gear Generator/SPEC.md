@@ -15,13 +15,19 @@ every other component. Everything then lands coaxial and correctly stacked.
                 Teeth         16
                 Pressure      20
                 Backlash      3
+                Pln           <- rack GearPlane   (type hint: Plane)
     CONSTANTS   xs            0.12      <- profile shift, avoids undercut at z16
                 ha            1.00
                 hf            1.25
                 rc            0.38
                 ns            48
-                pl            <- rack GearPlane
     AFTER       extrude the profile curve 6 mm, capped
+
+    NOTE        GearBlock_paste.cs is the SHORT variant: only Module, Teeth,
+                Pressure, Backlash and Pln are wired; Shift, Addendum,
+                Dedendum, RootFillet and Samples are constants in the source.
+                InvoluteGearProfile.cs exposes all ten as inputs instead -
+                same maths, longer parameter list.
 
     RESULT      pitch 24.00   tip 27.36   root 20.61   form (TIF) ~21.6
                 undercut limit 15.10 teeth -> z16 clear

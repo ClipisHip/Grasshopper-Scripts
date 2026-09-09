@@ -1,12 +1,18 @@
 // ===========================================================================
-//  THIS BUILD - set on the component:
+//  THIS BUILD - 5 inputs to create on the component:
 //     Module 1.5   Teeth 16   Pressure 20   Backlash 3
-//     Pln <- the RACK script's GearPlane
+//     Pln <- the RACK script's GearPlane          (type hint: Plane)
 //  Then extrude the Gear curve 6 mm, capped.
-//  Every constant below is already set for this build.
+//
+//  This is the SHORT variant: Shift, Addendum, Dedendum, RootFillet and
+//  Samples are constants a few lines down, already set for this build:
+//     Shift 0.12   Addendum 1.00   Dedendum 1.25   RootFillet 0.38
+//  Want them as wired inputs instead? Use InvoluteGearProfile.cs, which
+//  exposes all ten - it is the same maths, just a longer parameter list.
 // ===========================================================================
 
   private void RunScript(double Module, int Teeth, double Pressure, double Backlash,
+                         Plane Pln,
                          ref object Gear, ref object Circles, ref object Info)
   {
     List<string> log = new List<string>();
@@ -23,7 +29,7 @@
     double hf = 1.25;             // dedendum coefficient hf*
     double rc = 0.38;             // root fillet radius = rc * module
     int    ns = 48;               // sample points per flank
-    Plane  pl = Plane.WorldXY;    // base plane
+    Plane  pl = Pln.IsValid ? Pln : Plane.WorldXY;
 
     double sa = Math.Sin(a), ca = Math.Cos(a), ta = Math.Tan(a);
 
