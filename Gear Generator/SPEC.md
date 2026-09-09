@@ -155,15 +155,15 @@ every other component. Everything then lands coaxial and correctly stacked.
                 WireDia       1.5
                 Clearance     0.4
                 WallThk       3
-                Height        10
+                Height        4        <- SHORT: must not cover the anchor tang
                 LeverLength   25
                 LeverWidth    8
                 BasePlane     <- rack GearPlane
     CONSTANTS   slotFit       0.3
                 tangAng       0
                 leverAng      90
-                slotZ         5
-                zOff          30
+                slotZ         2.5      <- puts the slot at z 38.5 = the control tang
+                zOff          36       <- spans 36..40
 
     RESULT      bore 20.95, OD 26.95, min tang reach 12.7 (so 16 mm legs are fine)
                 release: 29 deg of swing, 19.4 mm of lever travel, 2.2 N
@@ -174,7 +174,7 @@ every other component. Everything then lands coaxial and correctly stacked.
 ## THE STACK
 
     z 40 ---- rotor top
-    z 30..40  spring hub, dia 17.15   (spring 31..38.5, collar 30..40)
+    z 30..40  spring hub, dia 17.15   (spring 31..38.5, collar 36..40)
     z 30      sleeve top at full travel
     z  6..30  cam, dia 18             (groove 10..26)
     z  0..6   gear, tip dia 27.36
@@ -217,3 +217,18 @@ every other component. Everything then lands coaxial and correctly stacked.
        highest-stress part).
     5. HOUSING GUIDE. The sleeve must be held from rotating, or it will spin
        instead of driving the cam.
+
+--------------------------------------------------------------------------------
+## TANG / SLOT ALIGNMENT
+
+    The coil script puts the ANCHOR tang at the helix START (bottom of the coil)
+    and the CONTROL tang at the helix END (top). Both are reported by the script.
+
+        collar tangAng = coil phi0 + frac(Coils) x 360
+        collar slotZ   = (coil zOff + Coils x pitch) - collar zOff
+
+    For this build: control tang at z 38.5, angle 0
+        collar zOff 36, slotZ 2.5  ->  slot at z 38.5   MATCHES
+
+    The collar must NOT cover z 31, where the anchor tang leaves the coil on its
+    way to the housing - which is why the collar is 4 tall and starts at 36.

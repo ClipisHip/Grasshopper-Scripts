@@ -130,6 +130,17 @@
     sb.AppendLine("coil OD             " + (Dh + 2.0 * d).ToString("0.###"));
     sb.AppendLine("body length         " + len.ToString("0.###") + "   (+ tangs " + tl.ToString("0.#") + " each)");
     sb.AppendLine("--");
+    sb.AppendLine("TANG POSITIONS  (z measured from the base plane)");
+    sb.AppendLine("  anchor  (start)   z " + zOff.ToString("0.###") +
+                  ",  angle " + (((phi0 % 360.0) + 360.0) % 360.0).ToString("0.#") + " deg  -> to the housing");
+    double angC = ((phi0 + 360.0 * (nc - Math.Floor(nc))) % 360.0 + 360.0) % 360.0;
+    sb.AppendLine("  control (end)     z " + (zOff + len).ToString("0.###") +
+                  ",  angle " + angC.ToString("0.#") + " deg  -> to the release collar");
+    sb.AppendLine("  SET ON THE COLLAR:  tangAng = " + angC.ToString("0.#") +
+                  ",  slotZ = (this z) - (collar zOff)");
+    sb.AppendLine("  keep the collar clear of z " + zOff.ToString("0.###") +
+                  " or it will trap the anchor tang");
+    sb.AppendLine("--");
     sb.AppendLine("holding torque req  " + Treq.ToString("0.###") + " N.m");
     sb.AppendLine("capacity            " + cap.ToString("0.#") + " N.m   (mu = " + mu.ToString("0.##") + ")");
     sb.AppendLine("initial tension     " + T0.ToString("0.#") + " N");
