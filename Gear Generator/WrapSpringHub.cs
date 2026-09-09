@@ -21,9 +21,11 @@
 
 // ===========================================================================
 //  THIS BUILD - set on the component:
-//     HubDia 17.15   HubLength 10   BoreDia 6
-//     FlatDepth 0   FlangeDia 0   FlangeThk 0
+//     HubDia 17.15   HubLength 10   BoreDia 6.4
+//     FlatDepth 0   FlangeDia 0   FlangeThk 0  (unused while FlangeDia is 0)
 //     BasePlane <- the RACK script's GearPlane
+//  BoreDia is 6.4, not 6: the rotor TURNS on the 6.0 shaft and needs a
+//  running clearance. See the FITS table in SPEC.md.
 //  Every constant below is already set for this build.
 // ===========================================================================
 
