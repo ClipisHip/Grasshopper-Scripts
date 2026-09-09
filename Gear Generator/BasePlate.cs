@@ -27,7 +27,8 @@
 
     double Dp = PlateDia > 1e-9 ? PlateDia : 62.0;
     double tp = PlateThk > 1e-9 ? PlateThk : 2.0;
-    double Ds = ShaftDia > 1e-9 ? ShaftDia : 6.0;
+    double Ds = ShaftDia > 1e-9 ? ShaftDia : 6.0;   // NOMINAL. The rotor bore
+                                                    // carries the clearance (6.4)
     double Ls = ShaftLen > 1e-9 ? ShaftLen : 42.0;
     int    np = PinCount > 0    ? PinCount : 2;
 

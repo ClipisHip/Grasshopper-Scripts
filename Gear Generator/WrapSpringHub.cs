@@ -38,7 +38,7 @@
 
     double Dh = HubDia    > 1e-9 ? HubDia    : 17.15;
     double Lh = HubLength > 1e-9 ? HubLength : 10.0;
-    double Db = BoreDia   > 1e-9 ? BoreDia   : 6.0;
+    double Db = BoreDia   > 1e-9 ? BoreDia   : 6.4;   // 0.4 clearance on the 6.0 shaft
     double fd = FlatDepth > 0.0  ? FlatDepth : 0.0;
     double Df = FlangeDia > 1e-9 ? FlangeDia : 0.0;
     double Tf = FlangeThk > 1e-9 ? FlangeThk : 3.0;

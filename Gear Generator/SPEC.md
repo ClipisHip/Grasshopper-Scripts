@@ -68,7 +68,7 @@ every other component. Everything then lands coaxial and correctly stacked.
                 margin        4        <- groove inset, so the sleeve clears the gear
                 turnsO        0
                 starts        2        <- MUST equal PinCount
-                bore          6
+                bore          6.4      <- 0.4 running clearance on the 6.0 shaft
                 phi0          90       <- MUST equal the sleeve's phi0
                 hand          +1       <- flip if it locks on the push
                 spt           64
@@ -157,7 +157,7 @@ every other component. Everything then lands coaxial and correctly stacked.
 
     INPUTS      HubDia        17.15    <- free ID 17.0 + 0.15 interference
                 HubLength     10
-                BoreDia       6
+                BoreDia       6.4      <- 0.4 running clearance on the 6.0 shaft
                 FlatDepth     0
                 FlangeDia     0        <- the gear is the flange
                 FlangeThk     0
@@ -365,6 +365,29 @@ every other component. Everything then lands coaxial and correctly stacked.
     Sleeve travels z 6..22 (base). It CANNOT go below the gear top face at z 6 -
     that limit is what sets the whole height budget:
         overall = gear face + stroke + FULL sleeve height + gap + hub
+
+--------------------------------------------------------------------------------
+## FITS - every mating pair
+
+    male                  female                gap    note
+    shaft 6.00            rotor bore 6.40      +0.40   ROTOR TURNS ON THIS
+    cam 18.00             sleeve bore 18.50    +0.50   sleeve slides
+    spring free ID 17.00  hub 17.15            -0.15   INTERFERENCE, intended
+    spring OD 20.15       collar bore 20.95    +0.80   collar rotates
+    sleeve waist 26.00    housing bore 26.80   +0.80   sleeve slides
+    sleeve length 50.00   housing bore 50.80   +0.80   sleeve slides
+    rib 5.60              key groove 6.00      +0.40   sleeve slides
+    collar OD 24.95       housing waist 26.80  +1.85   collar rotates
+    pin 3.80              cam groove 4.00      +0.20   pin slides
+    rack 6.37             window 7.00          +0.63   rack slides
+
+    The shaft fit was 6.00 into 6.00 - no clearance at all on the one surface
+    the whole rotor turns on. The clearance is put in the BORE, not the shaft,
+    so a real 6 mm steel rod can replace the printed one later.
+
+    Printed holes come out undersized and printed posts oversized, so 0.4
+    nominal often ends up near zero in the part. Ream or drill to 6.1-6.2 if
+    it binds - easier than adding material back.
 
 --------------------------------------------------------------------------------
 ## CHECKS — all with margin

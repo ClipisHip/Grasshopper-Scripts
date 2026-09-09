@@ -65,7 +65,11 @@
     double margin = 4.0;          // groove inset from each end of the cylinder
     double turnsO = 0.0;          // > 0 overrides the rack-derived turn count
     int    starts = 2;            // grooves around the cylinder (2 = balanced pin load)
-    double bore   = 6.0;          // central hole diameter, 0 = solid
+    double bore   = 6.4;          // 0.4 running clearance on the 6.0 shaft.
+                                  // The rotor TURNS on that shaft, so the fit
+                                  // must be free. Clearance is put in the bore,
+                                  // not the shaft, so a real 6 mm steel rod can
+                                  // replace the printed one later.
     double phi0   = 90.0;         // groove start angle - MUST equal the sleeve's phi0          // groove start angle [deg]
     double hand   = 1.0;          // +1 right-hand helix, -1 left-hand
     int    spt    = 64;           // cutter sections per turn
