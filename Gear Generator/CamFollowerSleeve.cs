@@ -29,6 +29,16 @@
 // ===========================================================================
 
 
+
+// ===========================================================================
+//  THIS BUILD - set on the component:
+//     CamDiameter 18   Clearance 0.25   OuterDiameter 26   Height 8
+//     GrooveWidth 4   GrooveDepth 2   PinCount 2
+//     BasePlane <- the RACK script's GearPlane
+//  zOff below is the TRAVEL:  6 = closed (pushed down),  22 = open (up).
+//  Every other constant is already set for this build.
+// ===========================================================================
+
 // ---------------------------------------------------------------------------
 //  paste this into  RunScript( ... )
 //  signature:
@@ -41,23 +51,23 @@
 
     List<string> log = new List<string>();
 
-    double Dc = CamDiameter   > 1e-9 ? CamDiameter   : 21.0;
+    double Dc = CamDiameter   > 1e-9 ? CamDiameter   : 18.0;
     double cl = Clearance     > 0.0  ? Clearance     : 0.25;
-    double Do = OuterDiameter > 1e-9 ? OuterDiameter : 28.0;
-    double Hs = Height        > 1e-9 ? Height        : 20.0;
+    double Do = OuterDiameter > 1e-9 ? OuterDiameter : 26.0;
+    double Hs = Height        > 1e-9 ? Height        :  8.0;
     double gw = GrooveWidth   > 1e-9 ? GrooveWidth   : 4.0;
-    double gd = GrooveDepth   > 1e-9 ? GrooveDepth   : 4.0;
+    double gd = GrooveDepth   > 1e-9 ? GrooveDepth   : 2.0;
     int    np = PinCount      > 0    ? PinCount      : 2;
 
     // --- match these to the cam script ---------------------------------------
     double pinClr = 0.2;          // pin-to-groove clearance ('suggested pin' in the cam report)
     int    starts = 2;            // groove starts on the cam - set the cam to match
-    double lead   = 122.667;      // 'lead (rise/turn)' from the cam report.
+    double lead   = 80.4;      // 'lead (rise/turn)' from the cam report.
                                   // only matters when PinCount != starts
-    double pinZ   = 0.0;          // first pin height above the base, 0 -> Height/2
+    double pinZ   = 4.0;          // first pin height above the base, 0 -> Height/2
     double hand   = 1.0;          // +1 right-hand, must match the cam
     double phi0   = 0.0;          // angle of the first pin [deg]
-    double zOff   = 0.0;          // slide the sleeve along the axis
+    double zOff   = 22.0;          // slide the sleeve along the axis
 
     double tol = 0.001;
     if (Rhino.RhinoDoc.ActiveDoc != null) tol = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;

@@ -21,6 +21,15 @@
 // ===========================================================================
 
 
+
+// ===========================================================================
+//  THIS BUILD - set on the component:
+//     WireDia 1.5   HubDia 17.15   Interference 0.15
+//     Coils 5   TangLength 16   Torque 1.92
+//     BasePlane <- the RACK script's GearPlane
+//  Every constant below is already set for this build.
+// ===========================================================================
+
 // ---------------------------------------------------------------------------
 //  paste into RunScript( ... )
 //    private void RunScript(double WireDia, double HubDia, double Interference,
@@ -32,11 +41,11 @@
     List<string> log = new List<string>();
 
     double d   = WireDia      > 1e-9 ? WireDia      : 1.5;
-    double Dh  = HubDia       > 1e-9 ? HubDia       : 20.0;
+    double Dh  = HubDia       > 1e-9 ? HubDia       : 17.15;
     double itf = Interference > 0.0  ? Interference : 0.15;
-    double nc  = Coils        > 0.2  ? Coils        : 4.0;
-    double tl  = TangLength   > 1e-9 ? TangLength   : 10.0;
-    double Treq= Torque       > 1e-9 ? Torque       : 2.93;
+    double nc  = Coils        > 0.2  ? Coils        : 5.0;
+    double tl  = TangLength   > 1e-9 ? TangLength   : 16.0;
+    double Treq= Torque       > 1e-9 ? Torque       : 1.92;
 
     // --- material / fit ------------------------------------------------------
     double E     = 200000.0;   // N/mm2, music wire / stainless spring steel
@@ -46,7 +55,7 @@
     double gap   = 0.0;        // axial gap between coils, 0 = close wound
     double phi0  = 0.0;        // angle of the anchor tang [deg]
     double hand  = 1.0;        // +1 right-hand wind, -1 left-hand
-    double zOff  = 0.0;        // slide along the axis, to sit on the hub
+    double zOff  = 31.0;        // slide along the axis, to sit on the hub
 
     double tol = 0.001;
     if (Rhino.RhinoDoc.ActiveDoc != null) tol = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;

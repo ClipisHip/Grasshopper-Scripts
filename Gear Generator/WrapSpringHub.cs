@@ -18,6 +18,15 @@
 // ===========================================================================
 
 
+
+// ===========================================================================
+//  THIS BUILD - set on the component:
+//     HubDia 17.15   HubLength 10   BoreDia 6
+//     FlatDepth 0   FlangeDia 0   FlangeThk 0
+//     BasePlane <- the RACK script's GearPlane
+//  Every constant below is already set for this build.
+// ===========================================================================
+
 // ---------------------------------------------------------------------------
 //  paste into RunScript( ... )
 //    private void RunScript(double HubDia, double HubLength, double BoreDia,
@@ -27,9 +36,9 @@
 
     List<string> log = new List<string>();
 
-    double Dh = HubDia    > 1e-9 ? HubDia    : 20.0;
+    double Dh = HubDia    > 1e-9 ? HubDia    : 17.15;
     double Lh = HubLength > 1e-9 ? HubLength : 10.0;
-    double Db = BoreDia   > 1e-9 ? BoreDia   : 8.0;
+    double Db = BoreDia   > 1e-9 ? BoreDia   : 6.0;
     double fd = FlatDepth > 0.0  ? FlatDepth : 0.0;
     double Df = FlangeDia > 1e-9 ? FlangeDia : 0.0;
     double Tf = FlangeThk > 1e-9 ? FlangeThk : 3.0;
@@ -38,7 +47,7 @@
     double bcDia   = 0.0;   // bolt circle diameter, 0 = no bolt holes
     double boltDia = 3.2;
     int    boltN   = 3;
-    double zOff    = 0.0;   // slide along the axis.  For a one-piece rotor with the hub
+    double zOff    = 30.0;   // slide along the axis.  For a one-piece rotor with the hub
                             // hanging BELOW the gear, set this to -(HubLength + FlangeThk).
 
     double tol = 0.001;

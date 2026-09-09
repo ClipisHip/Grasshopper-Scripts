@@ -28,6 +28,16 @@
 // ===========================================================================
 
 
+
+// ===========================================================================
+//  THIS BUILD - set on the component:
+//     Diameter 18   Height 24   Stroke 0
+//     GrooveWidth 4   GrooveDepth 2
+//     RackTeeth 3.183   GearTeeth 16
+//     GearPlane <- the RACK script's GearPlane
+//  Every constant below is already set for this build.
+// ===========================================================================
+
 // ---------------------------------------------------------------------------
 //  paste this into  RunScript( ... )
 //  signature:
@@ -40,22 +50,22 @@
 
     List<string> log = new List<string>();
 
-    double D  = Diameter    > 1e-9 ? Diameter    : 30.0;
-    double H  = Height      > 1e-9 ? Height      : 60.0;
+    double D  = Diameter    > 1e-9 ? Diameter    : 18.0;
+    double H  = Height      > 1e-9 ? Height      : 24.0;
     double gw = GrooveWidth > 1e-9 ? GrooveWidth : 4.0;
     double gd = GrooveDepth > 1e-9 ? GrooveDepth : 2.0;
-    double nT = RackTeeth   > 1e-9 ? RackTeeth   : 6.0;
-    int    zg = GearTeeth   > 2    ? GearTeeth   : 24;
+    double nT = RackTeeth   > 1e-9 ? RackTeeth   : 3.183;
+    int    zg = GearTeeth   > 2    ? GearTeeth   : 16;
 
     // --- match these to the gear / rack scripts ------------------------------
     double mod    = 1.5;          // module - only used to report travel in mm
-    double zOff   = 0.0;          // slide the cylinder along the gear axis.
+    double zOff   = 6.0;          // slide the cylinder along the gear axis.
                                   //   0        = base sits on the gear plane
                                   //   -0.5*H   = cylinder centred on the gear
     double margin = 4.0;          // groove inset from each end of the cylinder
     double turnsO = 0.0;          // > 0 overrides the rack-derived turn count
-    int    starts = 1;            // grooves around the cylinder (2 = balanced pin load)
-    double bore   = 0.0;          // central hole diameter, 0 = solid
+    int    starts = 2;            // grooves around the cylinder (2 = balanced pin load)
+    double bore   = 6.0;          // central hole diameter, 0 = solid
     double phi0   = 0.0;          // groove start angle [deg]
     double hand   = 1.0;          // +1 right-hand helix, -1 left-hand
     int    spt    = 64;           // cutter sections per turn
@@ -63,10 +73,10 @@
     double botR   = 0.0;          // groove bottom corner radius.  0 -> GrooveWidth/2,
                                   // i.e. a full U that a ball-nose pin seats in
     double pinClr = 0.2;          // pin-to-groove clearance, for the report
-    double endOverTop = -1.0;     // axial overshoot past the TOP of the cylinder, so the
+    double endOverTop = 5.0;     // axial overshoot past the TOP of the cylinder, so the
                                   // groove breaks out and the sleeve threads on from above.
                                   // <0 = auto (one groove width when Stroke = 0, else 0)
-    double endOverBot = 1.0;      // overshoot past the BOTTOM.  Keep this small when the
+    double endOverBot = 3.0;      // overshoot past the BOTTOM.  Keep this small when the
                                   // cam is fused to a gear below - it notches the gear face.
 
     double tol = 0.001;

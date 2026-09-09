@@ -1,16 +1,24 @@
+// ===========================================================================
+//  THIS BUILD - set on the component:
+//     Module 1.5   Teeth 16   Pressure 20   Backlash 3
+//     Pln <- the RACK script's GearPlane
+//  Then extrude the Gear curve 6 mm, capped.
+//  Every constant below is already set for this build.
+// ===========================================================================
+
   private void RunScript(double Module, int Teeth, double Pressure, double Backlash,
                          ref object Gear, ref object Circles, ref object Info)
   {
     List<string> log = new List<string>();
 
     // ---------- 1. inputs / defaults ---------------------------------------
-    double m  = Module > 1e-9 ? Module : 1.0;
-    int    z  = Teeth  > 2    ? Teeth  : 17;
+    double m  = Module > 1e-9 ? Module : 1.5;
+    int    z  = Teeth  > 2    ? Teeth  : 16;
     double pa = Math.Min(45.0, Math.Max(5.0, Pressure > 1e-9 ? Pressure : 20.0));
     double a  = RhinoMath.ToRadians(pa);
     double bl = Math.Max(0.0, Backlash);
     // --- tweak these here instead of wiring them as inputs ---
-    double xs = 0.0;              // profile shift coefficient x
+    double xs = 0.12;              // profile shift coefficient x
     double ha = 1.00;             // addendum coefficient ha*
     double hf = 1.25;             // dedendum coefficient hf*
     double rc = 0.38;             // root fillet radius = rc * module

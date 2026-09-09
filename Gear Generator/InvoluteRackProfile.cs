@@ -23,6 +23,14 @@
 // ===========================================================================
 
 
+
+// ===========================================================================
+//  THIS BUILD - set on the component:
+//     Module 1.5   Pressure 20   Backlash 0   RackTeeth 12   GearTeeth 16
+//  Build TWO, opposed.  Gear axis lands at (0, 12.18) from the datum line.
+//  Every constant below is already set for this build.
+// ===========================================================================
+
 // ---------------------------------------------------------------------------
 //  paste this into  RunScript( ... )
 //  signature:
@@ -33,15 +41,15 @@
 
     List<string> log = new List<string>();
 
-    double m  = Module > 1e-9 ? Module : 1.0;
+    double m  = Module > 1e-9 ? Module : 1.5;
     double pa = Math.Min(45.0, Math.Max(5.0, Pressure > 1e-9 ? Pressure : 20.0));
     double a  = RhinoMath.ToRadians(pa);
     double bl = Math.Max(0.0, Backlash);
     int    N  = RackTeeth > 0 ? RackTeeth : 12;
-    int    zg = GearTeeth > 2 ? GearTeeth : 24;
+    int    zg = GearTeeth > 2 ? GearTeeth : 16;
 
     // --- keep these identical to the gear script -----------------------------
-    double xs = 0.0;              // profile shift on the MATING GEAR
+    double xs = 0.12;              // profile shift on the MATING GEAR
     double ha = 1.00;             // addendum coefficient ha*
     double hf = 1.25;             // dedendum coefficient hf*
     double rc = 0.38;             // root fillet radius = rc * module

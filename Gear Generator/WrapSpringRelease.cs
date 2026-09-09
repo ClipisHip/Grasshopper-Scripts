@@ -21,6 +21,15 @@
 // ===========================================================================
 
 
+
+// ===========================================================================
+//  THIS BUILD - set on the component:
+//     CoilMeanDia 18.65   WireDia 1.5   Clearance 0.4
+//     WallThk 3   Height 4   LeverLength 25   LeverWidth 8
+//     BasePlane <- the RACK script's GearPlane
+//  Every constant below is already set for this build.
+// ===========================================================================
+
 // ---------------------------------------------------------------------------
 //  paste into RunScript( ... )
 //    private void RunScript(double CoilMeanDia, double WireDia, double Clearance,
@@ -31,11 +40,11 @@
 
     List<string> log = new List<string>();
 
-    double Dm = CoilMeanDia > 1e-9 ? CoilMeanDia : 21.5;
+    double Dm = CoilMeanDia > 1e-9 ? CoilMeanDia : 18.65;
     double d  = WireDia     > 1e-9 ? WireDia     : 1.5;
     double cl = Clearance   > 0.0  ? Clearance   : 0.4;
-    double wt = WallThk     > 1e-9 ? WallThk     : 4.0;
-    double Hc = Height      > 1e-9 ? Height      : 8.0;
+    double wt = WallThk     > 1e-9 ? WallThk     : 3.0;
+    double Hc = Height      > 1e-9 ? Height      : 4.0;
     double Ll = LeverLength > 1e-9 ? LeverLength : 25.0;
     double Lw = LeverWidth  > 1e-9 ? LeverWidth  : 8.0;
 
@@ -43,8 +52,8 @@
     double slotFit  = 0.3;    // slop around the wire in the slot
     double tangAng  = 0.0;    // where the control tang leaves the coil [deg]
     double leverAng = 90.0;   // lever direction [deg]
-    double slotZ    = 0.0;    // slot height above the collar base, 0 -> Height/2
-    double zOff     = 0.0;    // slide along the axis, to sit level with the spring
+    double slotZ    = 2.5;    // slot height above the collar base, 0 -> Height/2
+    double zOff     = 36.0;    // slide along the axis, to sit level with the spring
     bool   openTop  = true;   // cut the slot through to the collar's TOP edge, so the
                               // collar can drop on over the tang during assembly.
                               // The notch sides still drive the tang; a retaining cap
