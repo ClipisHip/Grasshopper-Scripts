@@ -45,15 +45,18 @@
     double rh = RackSlotH    > 1e-9 ? RackSlotH    :  7.0;
 
     // --- match these to the base plate, sleeve and racks ---------------------
-    double plateThk = 2.0;    // housing starts at -2, sitting on the plate
-    double bellyHi  = 7.0;    // belly runs z -2 .. 7 (gear is z 0..6)
-    double flangeD  = 62.0;
-    double flangeT  = 3.0;
+    double bellyHi  = 7.0;    // belly runs z 0 .. 7 (gear is z 0..6)
 
-    int    scN      = 3;
-    double scR      = 28.0;
+    // Screw LUGS, not a full flange. A flange big enough to carry screws at
+    // radius 28 is a 62 mm disc that the rack windows then cut straight
+    // through - weak, and a lot of unsupported area to print. Two lugs at
+    // the waist sit where the shell is closest and stay clear of everything.
+    int    lugN     = 2;
+    double lugPhi   = 90.0;   // waist axis - clear of ribs and rack windows
+    double lugR     = 24.0;   // screw circle RADIUS - must match the plate
+    double lugW     = 9.0;    // lug width
+    double lugT     = 3.0;    // lug thickness, z 0 .. 3
     double scDia    = 2.5;    // PILOT - the plate has the clearance hole
-    double scPhi    = 90.0;
 
     int    ribN     = 2;      // ANTI-ROTATION ribs, at the lobe tips
     double ribW     = 5.6;    // sleeve key groove 6.0 - 0.4 play
@@ -89,7 +92,7 @@
     double ao = ab + wt;
     double yb = 0.5 * Yw,  dy = 0.5 * Bl - yb;      // belly bore stadium, same LENGTH
     double yo = yb + wt;
-    double zBot = -plateThk;
+    double zBot = 0.0;                               // sits ON the plate top
     double lobeB = db + ab;                          // = dy + yb, shared lobe tip
 
     // ---------- checks -------------------------------------------------------
@@ -102,7 +105,7 @@
     if (ribZhi > Hh || leverZhi > Hh) log.Add("A feature runs past the top of the housing.");
     if (rackOff - 0.5 * rw < 0.5 * ribW)
       log.Add("Rack opening overlaps the rib at the lobe tip.");
-    if (flangeD < 2.0 * (dy + yo)) log.Add("Flange is smaller than the belly.");
+    if (lugR + 0.5 * scDia < yo) log.Add("Screw lug sits inside the shell wall.");
 
     // ---------- stadium helper -----------------------------------------------
     Func<double, double, double, Curve> stad = delegate(double aa, double dd, double zz)
@@ -126,8 +129,16 @@
     List<Brep> add = new List<Brep>();
     add.Add(exU.ToBrep());
     add.Add(exY.ToBrep());
-    add.Add(new Cylinder(new Circle(new Plane(new Point3d(0, 0, zBot), Vector3d.ZAxis),
-                                    0.5 * flangeD), flangeT).ToBrep(true, true));
+    for (int i = 0; i < lugN; i++)
+    {
+      double ang = RhinoMath.ToRadians(lugPhi) + 2.0 * Math.PI * i / lugN;
+      Vector3d rad = new Vector3d(Math.Cos(ang), Math.Sin(ang), 0.0);
+      Vector3d tng = Vector3d.CrossProduct(Vector3d.ZAxis, rad); tng.Unitize();
+      add.Add(new Box(new Plane(Point3d.Origin, rad, tng),
+                      new Interval(yo - 1.0, lugR + 5.0),
+                      new Interval(-0.5 * lugW, 0.5 * lugW),
+                      new Interval(zBot, zBot + lugT)).ToBrep());
+    }
     // NB the ribs are NOT added here. They protrude INTO the bore, so if they
     // were unioned before the bore is cut the bore would swallow them again.
     // They go on after the cuts, further down.
@@ -153,11 +164,11 @@
     if (bU == null || bY == null) { Info = "Could not extrude the bore."; return; }
     cut.Add(bU.ToBrep()); cut.Add(bY.ToBrep());
 
-    for (int i = 0; i < scN; i++)
+    for (int i = 0; i < lugN; i++)
     {
-      double a2 = RhinoMath.ToRadians(scPhi) + 2.0 * Math.PI * i / scN;
-      Point3d o = new Point3d(scR * Math.Cos(a2), scR * Math.Sin(a2), zBot - 1.0);
-      cut.Add(new Cylinder(new Circle(new Plane(o, Vector3d.ZAxis), 0.5 * scDia), flangeT + 2.0)
+      double a2 = RhinoMath.ToRadians(lugPhi) + 2.0 * Math.PI * i / lugN;
+      Point3d o = new Point3d(lugR * Math.Cos(a2), lugR * Math.Sin(a2), zBot - 1.0);
+      cut.Add(new Cylinder(new Circle(new Plane(o, Vector3d.ZAxis), 0.5 * scDia), lugT + 2.0)
               .ToBrep(true, true));
     }
 
@@ -165,12 +176,15 @@
     // rack i exits the opposite end, so the pair sits diagonally.
     for (int i = 0; i < rackN; i++)
     {
+      // a WINDOW where the rack crosses the wall, not a slot back to the axis
       double sgn = i == 0 ? 1.0 : -1.0;
       double y0  = sgn * rackOff;
-      double xLo = sgn > 0 ? 0.0 : -(0.5 * flangeD + 4.0);
-      double xHi = sgn > 0 ? (0.5 * flangeD + 4.0) : 0.0;
+      double yA  = Math.Abs(rackOff);
+      double xIn  = dy + Math.Sqrt(Math.Max(0.0, yb * yb - yA * yA));   // bore crossing
+      double xOut = dy + Math.Sqrt(Math.Max(0.0, yo * yo - yA * yA));   // outer crossing
       cut.Add(new Box(Plane.WorldXY,
-                      new Interval(xLo, xHi),
+                      new Interval(sgn > 0 ? xIn - 2.0 : -(xOut + 2.0),
+                                   sgn > 0 ? xOut + 2.0 : -(xIn - 2.0)),
                       new Interval(y0 - 0.5 * rw, y0 + 0.5 * rw),
                       new Interval(rackZlo, rackZlo + rh)).ToBrep());
     }
@@ -253,16 +267,19 @@
                   ",  outer " + (2.0 * (dy + yo)).ToString("0.###") + " x " + (2.0 * yo).ToString("0.###"));
     sb.AppendLine("  both stadiums share the length, so the lobe tips line up at +/-" +
                   lobeB.ToString("0.##"));
-    sb.AppendLine("flange              dia " + flangeD.ToString("0.###") + " x " + flangeT.ToString("0.###") +
-                  ",  " + scN + " pilot holes dia " + scDia.ToString("0.###") + " at radius " + scR.ToString("0.###"));
+    sb.AppendLine("screw lugs          " + lugN + " at " + lugPhi.ToString("0.#") + " deg, radius " +
+                  lugR.ToString("0.###") + ", " + lugW.ToString("0.###") + " wide x " +
+                  lugT.ToString("0.###") + " thick,  pilot dia " + scDia.ToString("0.###"));
+    sb.AppendLine("                    housing sits ON the plate: z " + zBot.ToString("0.##") + " upward");
     sb.AppendLine("--");
     sb.AppendLine("ANTI-ROTATION       " + ribN + " ribs at the lobe tips, " + ribW.ToString("0.###") +
                   " wide x " + ribDep.ToString("0.###") + " proud");
     sb.AppendLine("                    z " + ribZlo.ToString("0.##") + " .. " + ribZhi.ToString("0.##") +
                   "  (sleeve travels 6..30, so it is keyed throughout)");
-    sb.AppendLine("rack openings       " + rackN + " TANGENTIAL, offset +/-" + rackOff.ToString("0.##") +
+    sb.AppendLine("rack windows        " + rackN + " TANGENTIAL, offset +/-" + rackOff.ToString("0.##") +
                   " from the axis, " + rw.ToString("0.###") + " x " + rh.ToString("0.###"));
-    sb.AppendLine("                    one exits each end - they sit diagonally, not opposed");
+    sb.AppendLine("                    local to the wall crossing only - they no longer");
+    sb.AppendLine("                    cut back to the axis or through a flange");
     sb.AppendLine("lever gap           " + lv.ToString("0.#") + " deg at " + leverPhi.ToString("0.#") +
                   " deg, z " + leverZlo.ToString("0.##") + " .. " + leverZhi.ToString("0.##"));
     sb.AppendLine("clutch anchor slot  " + (ancOn ? ancW.ToString("0.##") + " square at (" +

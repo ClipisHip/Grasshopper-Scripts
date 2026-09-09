@@ -207,7 +207,7 @@ every other component. Everything then lands coaxial and correctly stacked.
     CONSTANTS   pinR          18       <- spring pin circle RADIUS
                 pinDia        3
                 pinLen        8
-                scN / scR     3 / 25   <- screw circle, matches the housing
+                scN/scR/scPhi 2 / 24 / 90   <- MUST match the housing's lugs
                 scDia         3.4      <- CLEARANCE (housing has the 2.5 pilot)
 
     RESULT      plate z -2 .. 0; its TOP is the gear plane.
@@ -225,10 +225,10 @@ every other component. Everything then lands coaxial and correctly stacked.
                 RackSlotW     7
                 RackSlotH     7
                 BasePlane     <- rack GearPlane
-    CONSTANTS   plateThk      2
-                bellyHi       7        <- belly spans z -2 .. 7
-                flangeD/T     62 / 3
-                scN/scR/scDia 3 / 28 / 2.5   <- PILOT holes
+    CONSTANTS   bellyHi       7        <- belly spans z 0 .. 7
+                lugN/Phi/R    2 / 90 / 24   <- MUST match the plate's screws
+                lugW/lugT     9 / 3
+                scDia         2.5      <- PILOT (plate has the 3.4 clearance)
                 ribN          2
                 ribW          5.6      <- sleeve key groove 6.0 - 0.4 play
                 ribDep        2.2
@@ -241,7 +241,9 @@ every other component. Everything then lands coaxial and correctly stacked.
                 rackZlo       0
 
     RESULT      upper  z 7..44   bore 50.8 x 26.8,  outer 54.8 x 30.8
-                belly  z -2..7   bore 50.8 x 36.0,  outer 54.8 x 40.0
+                belly  z 0..7    bore 50.8 x 36.0,  outer 54.8 x 40.0
+                The housing sits ON the plate (z 0 up), it no longer starts
+                at -2 and interpenetrate it.
                 Both stadiums share the LENGTH, so the lobe tips line up at
                 +/-25.4 and one rib section serves both levels.
 
@@ -274,10 +276,15 @@ every other component. Everything then lands coaxial and correctly stacked.
     the rack makes it fit the upper section. Hence the belly: 36 wide over
     z 0..7 gives 0.95 of clearance behind the rack.
 
-    OPENINGS are tangential boxes offset +/-13.87 from the axis, 7 x 7, one
-    running out each end - so they sit DIAGONALLY, not diametrically opposed.
-    They are at y +/-10.37..17.37 while the ribs are at y +/-2.80, so the two
-    never meet.
+    WINDOWS are tangential boxes offset +/-13.87 from the axis, 7 x 7, one
+    each end - so they sit DIAGONALLY, not diametrically opposed. They are at
+    y +/-10.37..17.37 while the ribs are at y +/-2.80, so the two never meet.
+
+    They are LOCAL to the wall crossing: the rack crosses the belly wall
+    between x 18.87 and 21.81, so each window spans about 6.9 mm of x. They
+    used to run x 0..35, carving a slot all the way back to the axis and
+    straight through the flange - which is what was weakening the part and
+    making it awkward to print.
 
     Assumed layout: two parallel racks either side of the gear, moving in
     opposite directions along the long axis, jaws at the two ends.

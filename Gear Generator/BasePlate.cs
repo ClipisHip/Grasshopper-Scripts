@@ -38,10 +38,11 @@
     double pinPhi  = 0.0;    // angle of the first pin [deg]
     double springOD = 6.0;   // for the report / clearance check only
 
-    int    scN     = 3;      // screws pulling the housing down
-    double scR     = 28.0;   // screw circle RADIUS - must match the housing flange
+    int    scN     = 2;      // screws pulling the housing down - MUST match
+                             // the housing's lugN / lugPhi / lugR
+    double scR     = 24.0;   // screw circle RADIUS - must match the housing lugs
     double scDia   = 3.4;    // clearance hole for M3 (housing has the 2.5 pilot)
-    double scPhi   = 60.0;   // angle of the first screw [deg]
+    double scPhi   = 90.0;   // angle of the first screw [deg] - must match
 
     double gearR   = 13.68;  // rotor gear radius, for the clearance check
     double zOff    = 0.0;    // slide the whole plate along the axis
