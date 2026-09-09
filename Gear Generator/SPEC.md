@@ -244,6 +244,11 @@ every other component. Everything then lands coaxial and correctly stacked.
                 belly  z 0..7    bore 50.8 x 36.0,  outer 54.8 x 40.0
                 The housing sits ON the plate (z 0 up), it no longer starts
                 at -2 and interpenetrate it.
+
+                The UPPER shell is extruded over the full 0..44 and the belly
+                OVERLAPS it. Extruding them to butt at z 7 leaves a coplanar
+                union face, which often fails to fuse and shows up as a
+                horizontal seam right at the belly step.
                 Both stadiums share the LENGTH, so the lobe tips line up at
                 +/-25.4 and one rib section serves both levels.
 
@@ -280,11 +285,20 @@ every other component. Everything then lands coaxial and correctly stacked.
     each end - so they sit DIAGONALLY, not diametrically opposed. They are at
     y +/-10.37..17.37 while the ribs are at y +/-2.80, so the two never meet.
 
-    They are LOCAL to the wall crossing: the rack crosses the belly wall
-    between x 18.87 and 21.81, so each window spans about 6.9 mm of x. They
-    used to run x 0..35, carving a slot all the way back to the axis and
-    straight through the flange - which is what was weakening the part and
-    making it awkward to print.
+    They are LOCAL to the wall crossing, but sized from the EXTREMES of the
+    window's own width, not its centre. The wall is curved, so where it
+    crosses depends on y:
+
+        y 10.37  wall at x 22.11 .. 24.50
+        y 13.87  wall at x 18.87 .. 21.81
+        y 17.37  wall at x 12.12 .. 17.31
+
+    Sizing from the centre alone gave x 16.87..23.81 and left solid wall in
+    the way at the far edge - the rack would not pass. The window now spans
+    x 11.12 .. 26.50 (15.4 mm), penetrating across its whole width.
+
+    They used to run x 0..35, carving a slot back to the axis and through the
+    flange, which is what weakened the part and made it awkward to print.
 
     Assumed layout: two parallel racks either side of the gear, moving in
     opposite directions along the long axis, jaws at the two ends.

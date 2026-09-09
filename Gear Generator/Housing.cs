@@ -122,7 +122,11 @@
     };
 
     // ---------- shell: upper section + belly + flange + ribs ------------------
-    Extrusion exU = Extrusion.Create(stad(ao, db, bellyHi), Hh - bellyHi, true);
+    // The upper shell runs the FULL height and the belly OVERLAPS it, rather
+    // than the two butting together on a coplanar face at bellyHi. Coplanar
+    // unions often fail to fuse, and that shows up as a horizontal seam
+    // right where the belly meets the shell.
+    Extrusion exU = Extrusion.Create(stad(ao, db, zBot), Hh - zBot, true);
     Extrusion exY = Extrusion.Create(stad(yo, dy, zBot), bellyHi - zBot, true);
     if (exU == null || exY == null) { Info = "Could not extrude the shell."; return; }
 
@@ -179,12 +183,16 @@
       // a WINDOW where the rack crosses the wall, not a slot back to the axis
       double sgn = i == 0 ? 1.0 : -1.0;
       double y0  = sgn * rackOff;
-      double yA  = Math.Abs(rackOff);
-      double xIn  = dy + Math.Sqrt(Math.Max(0.0, yb * yb - yA * yA));   // bore crossing
-      double xOut = dy + Math.Sqrt(Math.Max(0.0, yo * yo - yA * yA));   // outer crossing
+      // The wall is CURVED, so where it crosses depends on y. Size the window
+      // from the EXTREMES of its own width, not from the centre - at the far
+      // edge the wall sits several mm earlier and would be left in the way.
+      double yHi = Math.Abs(rackOff) + 0.5 * rw;
+      double yLo = Math.Abs(rackOff) - 0.5 * rw;
+      double xIn  = dy + Math.Sqrt(Math.Max(0.0, yb * yb - yHi * yHi));  // earliest bore crossing
+      double xOut = dy + Math.Sqrt(Math.Max(0.0, yo * yo - yLo * yLo));  // latest outer crossing
       cut.Add(new Box(Plane.WorldXY,
-                      new Interval(sgn > 0 ? xIn - 2.0 : -(xOut + 2.0),
-                                   sgn > 0 ? xOut + 2.0 : -(xIn - 2.0)),
+                      new Interval(sgn > 0 ? xIn - 1.0 : -(xOut + 2.0),
+                                   sgn > 0 ? xOut + 2.0 : -(xIn - 1.0)),
                       new Interval(y0 - 0.5 * rw, y0 + 0.5 * rw),
                       new Interval(rackZlo, rackZlo + rh)).ToBrep());
     }
