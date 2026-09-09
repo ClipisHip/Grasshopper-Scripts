@@ -161,7 +161,7 @@ every other component. Everything then lands coaxial and correctly stacked.
     INPUTS      CoilMeanDia   18.65    <- 17.15 hub + 1.5 wire
                 WireDia       1.5
                 Clearance     0.4
-                WallThk       3
+                WallThk       2        <- 3 clashes with the housing's oval waist
                 Height        4        <- SHORT: must not cover the anchor tang
                 LeverLength   25
                 LeverWidth    8
@@ -174,7 +174,8 @@ every other component. Everything then lands coaxial and correctly stacked.
                 openTop       true     <- notch open to the top edge, so the collar
                                           can drop on over the tang
 
-    RESULT      bore 20.95, OD 26.95, min tang reach 12.7 (so 16 mm legs are fine)
+    RESULT      bore 20.95, OD 24.95, min tang reach 11.3 (so 16 mm legs are fine)
+                clears the housing bore waist (13.40 radius) by 0.93
                 release: 29 deg of swing, 19.4 mm of lever travel, 2.2 N
     NEEDS       axial retention (lip or circlip) + a light return spring so the
                 lever parks engaged
@@ -198,9 +199,10 @@ every other component. Everything then lands coaxial and correctly stacked.
                 springs at radius 18 clear the gear (radius 13.68) by 1.32
 
 --------------------------------------------------------------------------------
-## 10. HOUSING                                     (Housing.cs)
+## 10. HOUSING - oval                               (Housing.cs)
 
-    INPUTS      InnerDia      42
+    INPUTS      BoreWaist     26.8     <- sleeve 26 + 0.4 clearance each side
+                BoreLength    50.8     <- sleeve 50 + 0.4
                 WallThk       2
                 Height        44
                 LeverSlotDeg  60
@@ -208,19 +210,25 @@ every other component. Everything then lands coaxial and correctly stacked.
                 RackSlotH     7
                 BasePlane     <- rack GearPlane
     CONSTANTS   plateThk      2        <- housing starts at -2, on the plate
-                flangeD/T     54 / 3
-                scN/scR/scDia 3 / 25 / 2.5   <- PILOT holes
-                tabN          2
-                tabSlotW      7        <- sleeve tab 6 + 1 play
-                tabZlo/Zhi    10 / 32  <- tab travels 12..30
+                flangeD/T     62 / 3
+                scN/scR/scDia 3 / 28 / 2.5   <- PILOT holes
+                ribN          2
+                ribW          5.6      <- sleeve key groove 6.0 - 0.4 play
+                ribDep        2.2
+                ribZlo/Zhi    8 / 32   <- 8 keeps it clear of the rack openings
                 leverPhi      90
                 leverZlo/Zhi  35 / 41  <- collar sits 36..40
                 rackN         2
                 rackZlo       0        <- gear sits 0..6
 
-    RESULT      bore 42, OD 46, flange 54.
-                The tab slots do TWO jobs: stop the sleeve rotating, and
-                clear the return springs.
+    RESULT      bore 50.8 x 26.8, outer 54.8 x 30.8, flange 62.
+                The bore follows the sleeve's stadium so the wall stays a
+                uniform 2 mm - a round bore big enough for a 50 mm oval
+                would leave a 12 mm wall at the waist.
+
+    THE BOTTOM CUTOUTS are the RACK OPENINGS: 7 x 7, at the lobe tips
+    (0 and 180 deg), z 0..7. The racks sit at gear level and travel out
+    along the long axis to reach the jaws, so they must break the wall.
 
 --------------------------------------------------------------------------------
 ## RETURN SPRINGS

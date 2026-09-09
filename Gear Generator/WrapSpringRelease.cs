@@ -25,7 +25,9 @@
 // ===========================================================================
 //  THIS BUILD - set on the component:
 //     CoilMeanDia 18.65   WireDia 1.5   Clearance 0.4
-//     WallThk 3   Height 4   LeverLength 25   LeverWidth 8
+//     WallThk 2   Height 4   LeverLength 25   LeverWidth 8
+//  WallThk 2 not 3: the housing's oval bore is only 26.8 across its waist,
+//  and a 3 mm wall puts the collar at 26.95 - just wide enough to clash.
 //     BasePlane <- the RACK script's GearPlane
 //  Every constant below is already set for this build.
 // ===========================================================================
@@ -43,7 +45,7 @@
     double Dm = CoilMeanDia > 1e-9 ? CoilMeanDia : 18.65;
     double d  = WireDia     > 1e-9 ? WireDia     : 1.5;
     double cl = Clearance   > 0.0  ? Clearance   : 0.4;
-    double wt = WallThk     > 1e-9 ? WallThk     : 3.0;
+    double wt = WallThk     > 1e-9 ? WallThk     : 2.0;
     double Hc = Height      > 1e-9 ? Height      : 4.0;
     double Ll = LeverLength > 1e-9 ? LeverLength : 25.0;
     double Lw = LeverWidth  > 1e-9 ? LeverWidth  : 8.0;
