@@ -330,6 +330,48 @@ every other component. Everything then lands coaxial and correctly stacked.
     room for both.
 
 --------------------------------------------------------------------------------
+## OPEN PROBLEM - THE ANCHOR TANG IS UNDERSIZED
+
+    The clutch does not STORE energy. The energy is in the squashed cloth and
+    the return springs; the clutch only refuses to let the rotor turn back.
+    Load path when the sleeve is held down:
+
+        sleeve -> pins -> cam groove -> rotor -> hub -> spring coil
+               -> ANCHOR TANG -> slot in the housing
+
+    So that one tang carries the entire grip.
+
+    For a TANGENTIAL tang, base at radius rc and force F at distance L:
+
+        torque about the axis = F x L
+        bending at the root   = F x L
+
+    They are the same number. The root moment therefore EQUALS the full
+    torque, whatever the tang's length and wherever it is supported. That is
+    an equilibrium result, so the usual fixes - shorten it, capture it closer
+    to the coil, support it along its length - do nothing at all.
+
+        clutch torque      1.92 N.m
+        1.5 mm wire, Z     0.331 mm3
+        root stress        5795 MPa   vs ~1700 yield   -> over by 3.4x
+
+    Wire needed for 1.92 N.m: 2.26 mm minimum.
+
+        wire 1.5 -> 0.56 N.m  =  47 N of rack force
+        wire 2.0 -> 1.34 N.m
+        wire 2.5 -> 2.61 N.m  (coil OD 22.15, still fits the 26.8 bore)
+        wire 3.0 -> 4.51 N.m
+
+    A 2.5 mm wire also drops hub pressure from 15.1 to 9.2 MPa.
+
+    ALTERNATIVE: the ratchet and pawl already in the repo. At radius 15 the
+    pawl sees 128 N in COMPRESSION along its arm rather than bending a thin
+    wire. Costs infinite adjustment, but 60 teeth gives 1.9 mm rack steps and
+    cloth compresses more than that.
+
+    UNRESOLVED - pick one before printing the clutch parts.
+
+--------------------------------------------------------------------------------
 ## RETURN SPRINGS
 
     A spring rising from the base CANNOT push on a ROUND sleeve: anything
