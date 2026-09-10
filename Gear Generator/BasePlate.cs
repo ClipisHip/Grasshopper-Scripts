@@ -11,7 +11,7 @@
 
 // ===========================================================================
 //  THIS BUILD - 6 inputs to create on the component:
-//     PlateDia 62   PlateThk 2   ShaftDia 6   ShaftLen 42
+//     PlateDia 62   PlateThk 2   ShaftDia 6   ShaftLen 46
 //     PinCount 2    BasePlane <- the RACK script's GearPlane
 //  Every constant below is already set for this build.
 // ===========================================================================
@@ -29,7 +29,8 @@
     double tp = PlateThk > 1e-9 ? PlateThk : 2.0;
     double Ds = ShaftDia > 1e-9 ? ShaftDia : 6.0;   // NOMINAL. The rotor bore
                                                     // carries the clearance (6.4)
-    double Ls = ShaftLen > 1e-9 ? ShaftLen : 42.0;
+    double Ls = ShaftLen > 1e-9 ? ShaftLen : 46.0;   // must reach the retainer
+                                                     // cap, which sits z 40.3..43.3
     int    np = PinCount > 0    ? PinCount : 2;
 
     // --- match these to the housing and the sleeve ---------------------------

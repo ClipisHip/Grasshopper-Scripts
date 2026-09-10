@@ -204,7 +204,7 @@ every other component. Everything then lands coaxial and correctly stacked.
     INPUTS      PlateDia      54
                 PlateThk      2
                 ShaftDia      6
-                ShaftLen      42
+                ShaftLen      46       <- must reach the retainer cap
                 PinCount      2
                 BasePlane     <- rack GearPlane
     CONSTANTS   pinR          18       <- spring pin circle RADIUS
@@ -261,6 +261,48 @@ every other component. Everything then lands coaxial and correctly stacked.
     RIB BUILD ORDER MATTERS. They stand proud INTO the bore, so they are
     unioned AFTER the bore is cut. Union them first and the bore cut simply
     swallows them again and the sleeve is left free to spin.
+
+--------------------------------------------------------------------------------
+## 11. RETAINER CAP                                (RetainerCap.cs)
+
+    INPUTS      CapDia        26
+                CapThk        3
+                ShaftDia      6
+                Gap           0.3
+                BasePlane     <- rack GearPlane
+    CONSTANTS   rotorTop      40
+                collarOD      24.95
+                boreWaist     26.8
+                pressFit      0.10     <- bore = ShaftDia - this
+                screwDia      0        <- >0 for a screw into the shaft end
+
+    RESULT      cap z 40.3 .. 43.3, pressed on the shaft top
+                overhangs the collar by 0.525 all round -> retains it
+                clears the housing bore by 0.400
+                0.3 gap above both tops, so nothing is clamped
+
+    It retains the ROTOR and the COLLAR at once: both tops sit at z 40, just
+    at different radii - hub out to 8.575, collar 10.475..12.475.
+
+    Needs ShaftLen 46 on the base plate, up from 42, to reach it.
+
+--------------------------------------------------------------------------------
+## WHAT THE SPRING ACTUALLY GRIPS
+
+    NOT the shaft. The spring wraps the HUB - the 17.15 boss that is part of
+    the rotor. The 6 mm shaft passes through the middle, separated from the
+    spring by the hub's 5.375 wall. They never touch.
+
+        shaft 6.0  ->  hub bore 6.4  ->  hub OD 17.15  ->  spring ID 17.0
+          fixed          rotor turns                        grips HERE
+
+    While you push, the hub turns the unwinding way under the spring and
+    friction drags the coils with it. The anchor tang resists, the control
+    tang is free, so the collar and lever drift a little in the RELEASE
+    direction. That is harmless and self-correcting - the spring has to
+    unwind slightly to slip at all, and it winds straight back the moment the
+    load reverses. The collar does not need a parking spring to function; one
+    would only give the lever a tidier rest position.
 
 --------------------------------------------------------------------------------
 ## RACKS - THEY MESH TANGENTIALLY
@@ -466,9 +508,7 @@ every other component. Everything then lands coaxial and correctly stacked.
        highest-stress part).
     5. HOUSING GUIDE. The sleeve must be held from rotating, or it will spin
        instead of driving the cam.
-    6. RETAINING CAP on the rotor top. The collar's notch is open upward so it
-       can be assembled, so something must stop it lifting off. The cap does
-       that and provides the axial retention the collar needs anyway.
+    6. RETAINING CAP - now built, see section 11.
 
 --------------------------------------------------------------------------------
 ## ASSEMBLY ORDER
