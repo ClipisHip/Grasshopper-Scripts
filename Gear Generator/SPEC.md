@@ -287,6 +287,35 @@ every other component. Everything then lands coaxial and correctly stacked.
     Needs ShaftLen 46 on the base plate, up from 42, to reach it.
 
 --------------------------------------------------------------------------------
+## BENCH TEST FOR THE CLUTCH
+
+    A wrap spring with NO interference has exactly zero capacity:
+
+        capacity = rM x T0 x (e^(mu.theta) - 1),  T0 comes only from the
+        interference.  Shaft under the free ID -> T0 = 0 -> capacity = 0.
+
+    It then spins freely BOTH ways and looks broken. It is not - there is
+    simply nothing for the exponential to amplify.
+
+    Testing it:
+      1. hold the hub, or any shaft LARGER than the spring's free ID
+      2. twist the two legs apart ~30 deg, slide the spring on, release
+      3. CHECK: it must not pull off by hand. If it slides on, stop - the
+         test is invalid and everything after it is meaningless
+      4. trap ONE leg against something solid - a vice or a pin, not fingers
+      5. turn the hub both ways
+
+    Expect a hard stop one way and free slip the other. WHICH LEG you hold
+    decides the direction; swap legs and the locking direction reverses.
+
+    A leg held in fingers can rotate bodily with the hub, which also reads as
+    "no locking". Trap it properly.
+
+    Unwinding widens the coil:  twist_deg = 360 x coils x dD / Dm
+        1.5 wire, 5 coils, ID 17.0  ->  29 deg for +0.3 mm
+        2.5 wire, 3 coils, ID 17.0  ->  17 deg for +0.3 mm
+
+--------------------------------------------------------------------------------
 ## WHAT THE SPRING ACTUALLY GRIPS
 
     NOT the shaft. The spring wraps the HUB - the 17.15 boss that is part of
@@ -517,8 +546,12 @@ every other component. Everything then lands coaxial and correctly stacked.
     2. sleeve  - WITHOUT pins, drops down from the top. Its bore radius 9.25
                  clears the hub radius 8.575 by 0.675.
     3. pins    - pressed in radially through the sleeve wall into the groove.
-    4. spring  - wound down onto the hub from the top (free ID 17.0 on a 17.15
-                 hub, so twist to expand it as it goes on)
+    4. spring  - TWISTED open and slid on. Free ID 17.0 on a 17.15 hub is an
+                 INTERFERENCE fit: it is meant to refuse to push on. Twist the
+                 two legs apart about 30 degrees to widen the coil, slide it
+                 down, release. It should then be impossible to pull off by
+                 hand - if it slides on freely the hub is too small and the
+                 clutch will not grip at all.
     5. collar  - drops down from the top; bore 20.95 clears the hub and the
                  spring OD 20.15, and the open notch passes the tang
     6. cap     - traps the collar axially, still free to rotate
