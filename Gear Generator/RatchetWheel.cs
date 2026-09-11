@@ -30,19 +30,20 @@
 
     List<string> log = new List<string>();
 
-    double Do = OuterDia   > 1e-9 ? OuterDia   : 30.0;
-    int    n  = Teeth      > 3    ? Teeth      : 60;
-    double h  = ToothDepth > 1e-9 ? ToothDepth : 1.2;
-    double th = Thickness  > 1e-9 ? Thickness  : 5.0;
-    double Db = BoreDia    > 0.0  ? BoreDia    : 8.0;
-    double la = LockAngle;
+    double Do = OuterDia   > 1e-9 ? OuterDia   : 24.0;   // fits the 26.8 bore waist
+    int    n  = Teeth      > 3    ? Teeth      : 40;     // 1.88 mm of rack per click
+    double h  = ToothDepth > 1e-9 ? ToothDepth : 0.8;
+    double th = Thickness  > 1e-9 ? Thickness  : 6.0;
+    double Db = BoreDia    > 0.0  ? BoreDia    : 6.4;    // 0.4 clearance on the 6.0 shaft
+    double la = LockAngle > 1e-9 ? LockAngle : 8.0;      // undercut - 0 lets the pawl climb out
     double rf = RootFillet > 0.0  ? RootFillet : 0.0;
 
     // --- for the report only -------------------------------------------------
     double mod   = 1.5;    // gear module
-    int    zGear = 24;     // gear teeth
-    double Treq  = 2.93;   // holding torque [N.m]
+    int    zGear = 16;     // gear teeth
+    double Treq  = 1.92;   // holding torque [N.m]
     double hand  = 1.0;    // -1 mirrors the teeth if it locks the wrong way
+    double zOff  = 32.0;   // sits on the rotor above the cam (cam ends at 30)
 
     double tol = 0.001;
     if (Rhino.RhinoDoc.ActiveDoc != null) tol = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
@@ -102,6 +103,7 @@
     }
 
     Plane bp = BasePlane.IsValid ? BasePlane : Plane.WorldXY;
+    bp.Origin = bp.Origin + bp.ZAxis * zOff;
     Transform xf = Transform.PlaneToPlane(Plane.WorldXY, bp);
     body.Transform(xf);
     prof.Transform(xf);

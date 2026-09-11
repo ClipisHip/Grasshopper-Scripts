@@ -32,20 +32,22 @@
 
     List<string> log = new List<string>();
 
-    double Dr = RatchetDia   > 1e-9 ? RatchetDia   : 30.0;
-    int    nz = Teeth        > 3    ? Teeth        : 60;
-    double h  = ToothDepth   > 1e-9 ? ToothDepth   : 1.2;
-    double Dp = PivotDist    > 1e-9 ? PivotDist    : 26.0;
-    double ca = ContactAngle;
+    double Dr = RatchetDia   > 1e-9 ? RatchetDia   : 24.0;   // match the wheel
+    int    nz = Teeth        > 3    ? Teeth        : 40;
+    double h  = ToothDepth   > 1e-9 ? ToothDepth   : 0.8;
+    double Dp = PivotDist    > 1e-9 ? PivotDist    : 16.0;   // inside the housing bore
+    double ca = ContactAngle > 1e-9 ? ContactAngle : 60.0;   // SELF-ENGAGING at Dp 16.
+                                                         // 0 and 45 are not - see Info.
     double aw = ArmWidth     > 1e-9 ? ArmWidth     : 5.0;
-    double th = Thickness    > 1e-9 ? Thickness    : 5.0;
+    double th = Thickness    > 1e-9 ? Thickness    : 6.0;    // match the wheel
     double ph = PivotHoleDia > 1e-9 ? PivotHoleDia : 3.2;
     double tl = TailLength   > 0.0  ? TailLength   : 12.0;
 
     // --- extras --------------------------------------------------------------
     double bossDia = 0.0;    // pivot boss diameter, 0 -> PivotHoleDia + 2*3
     double tipFrac = 0.75;   // how far into the tooth the tip reaches (0-1)
-    double Treq    = 2.93;   // holding torque [N.m], for the force report
+    double Treq    = 1.92;   // holding torque [N.m], for the force report
+    double zOff    = 32.0;   // level with the ratchet wheel
 
     double tol = 0.001;
     if (Rhino.RhinoDoc.ActiveDoc != null) tol = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
@@ -143,6 +145,7 @@
     else log.Add("Pivot hole boolean failed.");
 
     Plane bp = BasePlane.IsValid ? BasePlane : Plane.WorldXY;
+    bp.Origin = bp.Origin + bp.ZAxis * zOff;
     Transform xf = Transform.PlaneToPlane(Plane.WorldXY, bp);
     body.Transform(xf);
     prof.Transform(xf);
