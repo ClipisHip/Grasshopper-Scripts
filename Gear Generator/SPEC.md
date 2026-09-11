@@ -401,6 +401,34 @@ every other component. Everything then lands coaxial and correctly stacked.
     room for both.
 
 --------------------------------------------------------------------------------
+## THE WRAP SPRING NEEDS A METAL HUB - CONFIRMED ON THE BENCH
+
+    A 2.5 mm spring, tang trapped rigidly in a drill bit, turned freely in
+    BOTH directions on a printed shaft. Pulling it off showed helical grooves
+    the coils had cut into the plastic.
+
+    That is the mechanism failing, not the test. The coils thread-form a
+    groove of pitch = wire diameter. Once each coil sits in the groove it cut,
+    relative rotation no longer slides it around the shaft - it SCREWS ALONG
+    it. A 2.5 mm pitch on a 17 mm shaft is a coarse, freely back-drivable
+    thread, so it turns easily both ways and no tension ever builds.
+
+    It is unavoidable in plastic. Round wire on a cylinder is LINE contact:
+
+        material   wire 1.5   wire 2.5   yield
+        PLA          195        152        60
+        PETG         154        120        50
+        POM          174        136        70      (MPa)
+
+    2-3x over yield in every case. The 9-15 MPa quoted elsewhere in this
+    file is a SMEARED AVERAGE over the coil pitch - the real local stress is
+    an order of magnitude higher.
+
+    To use the wrap spring the hub needs a METAL gripping surface: a steel
+    sleeve pressed over the printed boss. Steel on steel runs ~1500 MPa
+    against ~2000 yield. This is a requirement, not a material preference.
+
+--------------------------------------------------------------------------------
 ## OPEN PROBLEM - THE ANCHOR TANG IS UNDERSIZED
 
     The clutch does not STORE energy. The energy is in the squashed cloth and
@@ -441,6 +469,15 @@ every other component. Everything then lands coaxial and correctly stacked.
     cloth compresses more than that.
 
     UNRESOLVED - pick one before printing the clutch parts.
+
+    RECOMMENDATION: the ratchet. The wrap spring has now hit two independent
+    blockers, both tracing to a thin steel wire loaded against soft plastic -
+    the tang undersized 3.4x, and the hub thread-forming. The ratchet's pawl
+    bears 128 N in COMPRESSION on a tooth flank, which printed plastic takes
+    without complaint.
+
+    The wrap spring stays viable WITH a steel hub sleeve, if stepless
+    adjustment is worth the extra part.
 
 --------------------------------------------------------------------------------
 ## RETURN SPRINGS
