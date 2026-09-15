@@ -20,6 +20,21 @@
 // ===========================================================================
 
 
+// ===========================================================================
+//  THIS BUILD - 8 inputs to create on the component:
+//     OuterDia 24   Teeth 40   ToothDepth 0.8   Thickness 8
+//     BoreDia 6.4   LockAngle 8   RootFillet 0
+//     BasePlane <- the RACK script's GearPlane
+//  Every constant below is already set for this build.
+//
+//  WHY 8 THICK AND zOff 30. The pawl swings at z 32..38, so the TEETH must be
+//  there. But the cam tops out at z 30, and a wheel starting at 32 would leave
+//  the rotor in two disconnected pieces. Spanning 30..38 butts the cam and
+//  still puts 6 mm of tooth in front of the 6 mm pawl. The spare 30..32 band
+//  doubles as the sleeve's top end-stop: the sleeve tops out at exactly 30
+//  and the wheel's 24 dia overhangs its 18.5 bore.
+// ===========================================================================
+
 // ---------------------------------------------------------------------------
 //  paste into RunScript( ... )
 //    private void RunScript(double OuterDia, int Teeth, double ToothDepth,
@@ -33,7 +48,9 @@
     double Do = OuterDia   > 1e-9 ? OuterDia   : 24.0;   // fits the 26.8 bore waist
     int    n  = Teeth      > 3    ? Teeth      : 40;     // 1.88 mm of rack per click
     double h  = ToothDepth > 1e-9 ? ToothDepth : 0.8;
-    double th = Thickness  > 1e-9 ? Thickness  : 6.0;
+    double th = Thickness  > 1e-9 ? Thickness  : 8.0;   // 30..38: butts the cam
+                                                        // at 30, teeth face the
+                                                        // pawl over 32..38
     double Db = BoreDia    > 0.0  ? BoreDia    : 6.4;    // 0.4 clearance on the 6.0 shaft
     double la = LockAngle > 1e-9 ? LockAngle : 8.0;      // undercut - 0 lets the pawl climb out
     double rf = RootFillet > 0.0  ? RootFillet : 0.0;
@@ -43,7 +60,7 @@
     int    zGear = 16;     // gear teeth
     double Treq  = 1.92;   // holding torque [N.m]
     double hand  = 1.0;    // -1 mirrors the teeth if it locks the wrong way
-    double zOff  = 32.0;   // sits on the rotor above the cam (cam ends at 30)
+    double zOff  = 30.0;   // sits ON the cam top, so the rotor stays one piece
 
     double tol = 0.001;
     if (Rhino.RhinoDoc.ActiveDoc != null) tol = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;

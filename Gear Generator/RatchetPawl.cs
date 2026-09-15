@@ -22,6 +22,24 @@
 // ===========================================================================
 
 
+// ===========================================================================
+//  THIS BUILD - 10 inputs to create on the component:
+//     RatchetDia 24   Teeth 40   ToothDepth 0.8   PivotDist 16
+//     ContactAngle 60   ArmWidth 5   Thickness 6   PivotHoleDia 3.2
+//     TailLength 12
+//     BasePlane <- the RACK script's GearPlane
+//  Every constant below is already set for this build.
+//
+//  PivotDist 16 and ContactAngle 60 are not free. They are the shortest arm
+//  that is SELF-ENGAGING - the tooth load has to drive the tip further in, not
+//  lever it out. 0 and 45 degrees both fail the check; the Info output says so.
+//  PivotDist 16 must also equal pawlX in HousingRatchet.cs, which is where the
+//  post that carries this pawl is built.
+//
+//  TailLength 12 puts the tail tip at radius 26.02, angle -18.6 deg, which is
+//  what sets the housing's release gap at -19 deg.
+// ===========================================================================
+
 // ---------------------------------------------------------------------------
 //  paste into RunScript( ... )
 //    private void RunScript(double RatchetDia, int Teeth, double ToothDepth, double PivotDist,

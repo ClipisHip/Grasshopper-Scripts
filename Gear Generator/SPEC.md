@@ -201,7 +201,7 @@ every other component. Everything then lands coaxial and correctly stacked.
 --------------------------------------------------------------------------------
 ## 9. BASE PLATE                                   (BasePlate.cs)
 
-    INPUTS      PlateDia      54
+    INPUTS      PlateDia      62       <- must cover the lugs, which reach r29
                 PlateThk      2
                 ShaftDia      6
                 ShaftLen      46       <- must reach the retainer cap
@@ -285,6 +285,243 @@ every other component. Everything then lands coaxial and correctly stacked.
     at different radii - hub out to 8.575, collar 10.475..12.475.
 
     Needs ShaftLen 46 on the base plate, up from 42, to reach it.
+
+    FOR THE RATCHET BUILD this part changes - CapDia 20, rotorTop 38,
+    collarOD 22.40, and ShaftLen goes back to 42. See WHAT THE RATCHET BUILD
+    CHANGES ELSEWHERE.
+
+================================================================================
+#  RATCHET OPTION
+#
+#  Sections 12-14 replace the wrap spring (sections 5-8 and the RETAINER CAP's
+#  collar duty) with a ratchet and pawl. Build ONE or the OTHER, never both.
+#  Sections 1-4 and 9 are shared unchanged; 10 and 11 need the small edits
+#  listed under WHAT THE RATCHET BUILD CHANGES ELSEWHERE.
+#
+#  Why: the wrap spring hit two independent blockers, both a thin steel wire
+#  against soft plastic - the anchor tang undersized 3.4x, and the hub
+#  thread-forming on the bench. See OPEN PROBLEM - THE ANCHOR TANG. The pawl
+#  loads a tooth flank in COMPRESSION instead, which printed plastic takes.
+#  Cost: adjustment goes from stepless to 1.885 mm steps at the rack.
+================================================================================
+
+--------------------------------------------------------------------------------
+## 12. RATCHET WHEEL - part of the rotor           (RatchetWheel.cs)
+
+    INPUTS      OuterDia      24       <- 1.4 clear in the 26.8 bore waist
+                Teeth         40
+                ToothDepth    0.8
+                Thickness     8        <- see WHY 8 below
+                BoreDia       6.4      <- MUST match the gear and cam
+                LockAngle     8        <- undercut; 0 lets the pawl climb out
+                RootFillet    0
+                BasePlane     <- rack GearPlane
+    CONSTANTS   mod           1.5      <- report only
+                zGear         16       <- report only
+                Treq          1.92     <- holding torque, report only
+                hand          +1       <- flip if it locks on the push
+                zOff          30       <- sits ON the cam top
+
+    RESULT      wheel z 30..38, tip dia 24, root dia 22.40
+                tooth pitch 1.885, step 9.000 deg
+                ONE CLICK = 1.885 mm of rack (m1.5 z16)
+                pawl contact 168 N at 1.92 N.m
+                tooth bending 37.9 MPa on the 6 mm the pawl engages (POM ~65)
+
+    WHY 8 THICK, STARTING AT 30. The pawl swings at z 32..38, so the teeth have
+    to be there - but the cam tops out at 30, and a wheel starting at 32 would
+    leave the rotor in two disconnected pieces with nothing carrying torque
+    across the gap. Spanning 30..38 butts the cam and still presents 6 mm of
+    tooth to the 6 mm pawl. The spare 30..32 band earns its keep as the
+    sleeve's top end-stop: the sleeve tops out at exactly 30 and the wheel's
+    24 dia overhangs its 18.5 bore.
+
+    ONE MOULDED ROTOR = gear + cam + ratchet wheel, single 6.4 bore throughout.
+    Union gear.Solid + cam.Body + wheel.Body. No hub, no coil, no collar.
+
+--------------------------------------------------------------------------------
+## 13. RATCHET PAWL                                (RatchetPawl.cs)
+
+    INPUTS      RatchetDia    24       <- MUST match the wheel
+                Teeth         40       <- MUST match the wheel
+                ToothDepth    0.8      <- MUST match the wheel
+                PivotDist     16       <- MUST equal the housing's pawlX
+                ContactAngle  60
+                ArmWidth      5
+                Thickness     6
+                PivotHoleDia  3.2
+                TailLength    12
+                BasePlane     <- rack GearPlane
+    CONSTANTS   bossDia       0        <- 0 -> PivotHoleDia + 6 = 9.2
+                tipFrac       0.75     <- contact radius 11.4
+                Treq          1.92
+                zOff          32       <- level with the wheel's upper 6 mm
+
+    RESULT      pawl z 32..38, pivot at (16, 0), tip at (5.70, 9.87)
+                arm reach 14.267, tip width 1.16 (tooth pitch 1.789 at r11.4)
+                SELF-ENGAGING - the tooth load drives the tip further in
+                contact force 168 N at 1.92 N.m
+                tail tip at radius 26.02, angle -18.6 deg
+
+    PivotDist 16 / ContactAngle 60 ARE NOT FREE. They are the shortest arm that
+    passes the self-engagement check: the tooth load has to drive the tip in,
+    not lever it out. 0 and 45 deg both FAIL - the Info output says which.
+    Sweeping the pair is the only way to find a working combination; do not
+    move the pivot without re-reading that line.
+
+    The tail at -18.6 deg is what sets the housing's release gap at -19 deg.
+    Pushing the tail lifts the tip out and the rotor spins back under the
+    return springs.
+
+--------------------------------------------------------------------------------
+## 14. HOUSING - RATCHET VARIANT                   (HousingRatchet.cs)
+
+    Housing.cs is the wrap-spring version and is LEFT ALONE. This is a separate
+    file: same oval shell and belly, but carrying the pawl instead of the
+    clutch's anchor slot and lever gap.
+
+    INPUTS      BoreWaist     26.8
+                BoreLength    50.8
+                WallThk       2
+                Height        42       <- was 44; no collar to house
+                BellyWaist    36
+                RelSlotDeg    -19      <- on the pawl tail's line
+                RackSlotW     7
+                RackSlotH     7
+                BasePlane     <- rack GearPlane
+    CONSTANTS   bellyHi       7
+                lugN/Phi/R    2 / 90 / 24   <- MUST match the plate's screws
+                lugW/lugT     9 / 3
+                scDia         2.5      <- PILOT (plate has the 3.4 clearance)
+                ribN          2
+                ribW          5.6
+                ribDep        2.2
+                ribZlo/Zhi    2 / 30   <- was 2/32; stops short of the webs
+                rackN         2
+                rackOff       13.87
+                rackZlo       0
+                pawlX         16       <- MUST equal the pawl's PivotDist
+                postDia       6        <- r3 vs the r12 wheel -> 1.0 clear
+                pinDia        3.2      <- USE A METAL PIN
+                postZlo/Zhi   30 / 40
+                pawlZlo/Zhi   31.8 / 38.2   <- 6.4 gap for the 6.0 pawl
+                webW          5
+                relW          8
+                relZlo/Zhi    31 / 39
+                zOff          0
+
+    RESULT      upper  z 7..42   bore 50.8 x 26.8,  outer 54.8 x 30.8
+                belly  z 0..7    bore 50.8 x 36.0,  outer 54.8 x 40.0
+                post dia 6 at (16, 0), z 30..40, clear of the wheel by 1.0
+                pawl swings in z 31.8..38.2 - 0.2 clearance each face
+                release gap 8 wide at -19 deg, z 31..39, out through the wall
+
+    WHY THE WEB IS SPLIT. The pivot sits at x 16; the bore wall on that line is
+    at 25.4, so the post floats 9.4 mm out in mid-air and needs a web to hold
+    it. A web BESIDE the pawl would want the same corridor as the release tail,
+    which swings through that band - only 1.3 mm left between them. So the web
+    is split into one BELOW the pawl (z 30..31.8) and one ABOVE (z 38.2..40).
+    The post is then a clevis, the pawl swings between the two, and the whole
+    z 32..38 band is left clear for the tail.
+
+    BUILD ORDER MATTERS - ribs, post and webs all stand proud INTO the bore, so
+    they are unioned AFTER the bore is cut. Union them first and the bore cut
+    swallows them again. The pin hole is cut LAST, through the finished post.
+
+    NO PART OF THIS IS A STOP. The pawl is held in the teeth by a spring that
+    is still missing - see the open items below.
+
+--------------------------------------------------------------------------------
+## RATCHET LOAD PATH - every number
+
+        ratchet wheel  ->  pawl  ->  pin  ->  post  ->  webs  ->  shell
+
+    Contact force 168 N (= 1.92 N.m / 11.4 mm contact radius). At the pivot
+    that resolves into 145.9 N radially OUTWARD, toward the wall, and 84.2 N
+    sideways - which is why the webs run radially: the big component is pure
+    compression along them.
+
+        wheel tooth bending      37.9 MPa    POM ~65
+        pin double shear         10.5 MPa    METAL pin
+        pin bearing in the pawl   8.8 MPa    6.0 mm of pawl
+        pin bearing in the webs  14.6 MPa    3.6 mm of web, 1.8 each
+        web compression           8.1 MPa    145.9 N over 2 x 5.0 x 1.8
+        web bending              35.9 MPa    84.2 N, 6.4 span, Z 7.50
+
+    WEB BENDING IS THE TIGHTEST NUMBER IN THE RATCHET - 35.9 against POM's ~65,
+    a margin of 1.8. Everything else has 4x or better. If it needs more, widen
+    webW before anything else: the stress goes as 1/webW^2.
+
+    A PRINTED 3.2 PIN WOULD SEE 10.5 MPa IN DOUBLE SHEAR, which sounds fine
+    until you remember it is printed across the layers. Use a metal pin - a
+    3 mm dowel or a cut-down M3 - and drill the post 3.2.
+
+--------------------------------------------------------------------------------
+## WHAT THE RATCHET BUILD CHANGES ELSEWHERE
+
+    Shared scripts stay as written for the wrap-spring build. Change these
+    three values on the component (or in the source) when building the ratchet:
+
+    part / script          value        wrap spring     ratchet
+    BasePlate  ShaftLen    input        46              42
+    RetainerCap CapDia     input        26              20
+    RetainerCap rotorTop   constant     40              38
+    RetainerCap collarOD   constant     24.95           22.40
+
+    ShaftLen 42 - the cap now lands at z 38.3..41.3, so the shaft reaches 42
+    and finishes flush with the top of the 42 housing.
+
+    CapDia 20 - there is no collar to retain, only the rotor, whose top is the
+    wheel's 22.40 root dia. A 20 cap still covers that rim with room to spare,
+    and more to the point it clears the upper web, whose inner edge is at
+    x 13. The wrap build's 26 cap (r13) would sit exactly on it.
+
+    collarOD 22.40 - the cap script checks that it overhangs this. Pointed at
+    the collar it will warn about a part that is not in this build.
+
+    NOT CHANGED: gear (1), racks (2), cam (3), sleeve (4), base plate (9) apart
+    from ShaftLen. The cam stays Height 24 / Stroke 0, body z 6..30 - do NOT
+    stretch it to meet the wheel, because the script centres a short stroke in
+    the available run and the groove would move up with it.
+
+    DROPPED ENTIRELY: sections 5, 6, 7, 8 - the purchased spring, the coil
+    model, the spring hub and the release collar.
+
+--------------------------------------------------------------------------------
+## RATCHET OPEN ITEMS
+
+    1. THE PAWL SPRING IS STILL MISSING. Nothing currently holds the tip into
+       the teeth, and a pawl resting on nothing does not ratchet. It needs only
+       a gentle load - the self-engagement geometry does the rest once a tooth
+       is caught. A small torsion spring over the 3.2 pin, one leg on the tail
+       and one on the shell, is the obvious answer, but it is not modelled and
+       there is no anchor feature for it in HousingRatchet.cs yet.
+       NOTHING SHOULD BE PRINTED FOR A FUNCTIONAL TEST UNTIL THIS IS RESOLVED.
+
+    2. RIB / WEB COPLANAR FACE. The rib at angle 0 tops out at z 30 and the
+       lower web starts at z 30, overlapping over about 4.2 x 5.0 mm. They are
+       unioned in the same call, and a coplanar face pair is exactly what left
+       the horizontal seam at the belly step - see section 10. If the union
+       fails or seams there, raise ribZhi to 30.5 so the rib runs INTO the web
+       instead of butting it. 30.5 is still below pawlZlo 31.8, so the script's
+       own check stays happy.
+
+    3. DIRECTION, same as the wrap spring. Pushing down must turn the gear the
+       way the pawl RIDES OVER the teeth. 50/50 and invisible in CAD. If it
+       locks on the first push, flip `hand` on the cam - or on the wheel, which
+       mirrors the teeth instead.
+
+    4. PIN RETENTION. The script cuts ONE 3.2 hole straight through post, webs
+       and all, so a 3.0 dowel is +0.2 loose in the webs as well as in the
+       pawl - nothing stops it walking out sideways. Either drill the webs
+       2.9 for a press fit and leave the pawl at 3.2, or use a pin with a head
+       or an E-clip groove. Not a load problem, just a fall-out problem.
+
+    5. RESOLUTION. One click is 1.885 mm at the rack, so the grip lands
+       somewhere in a 1.885 mm band rather than exactly where the user stopped
+       pushing. Cloth compresses far more than that, so this is expected to be
+       invisible in use - but it is the one thing the wrap spring did better,
+       and it is the reason to keep section 5-8 on file.
 
 --------------------------------------------------------------------------------
 ## BENCH TEST FOR THE CLUTCH
@@ -468,7 +705,10 @@ every other component. Everything then lands coaxial and correctly stacked.
     wire. Costs infinite adjustment, but 60 teeth gives 1.9 mm rack steps and
     cloth compresses more than that.
 
-    UNRESOLVED - pick one before printing the clutch parts.
+    RESOLVED - the ratchet was chosen and is now built out in full: sections
+    12, 13 and 14, with its own housing file. This section is kept because the
+    wrap spring is still the better mechanism IF a steel hub sleeve is worth an
+    extra part - it is the only version with stepless adjustment.
 
     RECOMMENDATION: the ratchet. The wrap spring has now hit two independent
     blockers, both tracing to a thin steel wire loaded against soft plastic -
@@ -504,12 +744,21 @@ every other component. Everything then lands coaxial and correctly stacked.
 --------------------------------------------------------------------------------
 ## THE STACK
 
-    z 40 ---- rotor top
-    z 30..40  spring hub, dia 17.15   (spring 31..38.5, collar 36..40)
-    z 30      sleeve top at full travel
-    z  6..30  cam, dia 18             (groove 10..26)
-    z  0..6   gear, tip dia 27.36
-    z  0      gear plane = rack GearPlane origin
+    WRAP SPRING BUILD                   RATCHET BUILD
+    z 40 ---- rotor top                 z 42 ---- housing top, shaft flush
+    z 30..40  hub, dia 17.15            z 38.3..41.3  cap, dia 20
+       (spring 31..38.5,                z 38..40  upper web
+        collar 36..40)                  z 32..38  pawl, in the wheel's teeth
+                                        z 30..38  ratchet wheel, dia 24
+    z 30      sleeve top, full travel   z 30..31.8 lower web
+    z  6..30  cam, dia 18               z 30      sleeve top, full travel
+              (groove 10..26)           z  6..30  cam, dia 18 (groove 10..26)
+    z  0..6   gear, tip dia 27.36       z  0..6   gear, tip dia 27.36
+    z  0      gear plane = rack GearPlane origin, both builds
+
+    The ratchet build is 2 mm SHORTER overall (42 vs 44 housing) despite
+    stacking more parts, because the wheel shares the 30..38 band with the
+    pawl instead of the hub and collar needing separate levels.
 
     ONE MOULDED ROTOR = gear + cam + hub, single 6.4 bore throughout on a
     6.0 shaft. Union gear.Solid + cam.Body + hub.Body.
@@ -536,6 +785,13 @@ every other component. Everything then lands coaxial and correctly stacked.
     collar OD 24.95       housing waist 26.80  +1.85   collar rotates
     pin 3.80              cam groove 4.00      +0.20   pin slides
     rack 6.37             window 7.00          +0.63   rack slides
+
+    RATCHET BUILD, in place of the spring / collar rows above:
+    pawl 6.00             web gap 6.40         +0.40   pawl swings, 0.2 a face
+    pin 3.00 metal        post hole 3.20       +0.20   pawl pivots - see below
+    wheel tip 24.00       housing waist 26.80  +2.80   wheel turns
+    post 6.00 at x16      wheel tip r 12.00    +1.00   post clears the wheel
+    cap 20.00             web inner edge x13   +3.00   cap clears the web
 
     The shaft fit was 6.00 into 6.00 - no clearance at all on the one surface
     the whole rotor turns on. The clearance is put in the BORE, not the shaft,
