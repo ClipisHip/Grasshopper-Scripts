@@ -13,6 +13,11 @@ Verified configuration. Every number below has been checked against the others.
     height budget is already spent on.
     Everything else got easier: every load in the machine halved with it.
 
+    OR SPEND IT UNEVENLY. Section 3-ALT is a two-stage cam that puts most of
+    the stroke into fast travel and the last part into a steep lead, giving
+    158 N for the final 6 mm of jaw travel. Same identity, better placed.
+    The numbers below are for the CONSTANT-lead cam of section 3.
+
 Wire the RACK script's `GearPlane` output into the `BasePlane` / `Pln` input of
 every other component. Everything then lands coaxial and correctly stacked.
 
@@ -98,6 +103,55 @@ every other component. Everything then lands coaxial and correctly stacked.
         max turns 0.4293  ->  MAX JAW TRAVEL 32.4 mm
     30 is close to that ceiling. More travel means dropping to one start, which
     unbalances the pin load, or a bigger cam diameter.
+
+--------------------------------------------------------------------------------
+## 3-ALT. CAM - TWO STAGE                         (HelicalCamTwoStage.cs)
+
+    An ALTERNATIVE to section 3, not a replacement. HelicalCamCylinder.cs is
+    left alone; build one or the other and test both.
+
+    INPUTS      Diameter      18
+                Height        24
+                GrooveWidth   4
+                GrooveDepth   2
+                RackTeeth     6.366    <- = 30 mm / (pi x 1.5)
+                GearTeeth     16
+                SqueezeTravel 6        <- jaw travel spent at high force
+                ForceRatio    2.61     <- lead2 / lead1
+                GearPlane     <- rack GearPlane
+    CONSTANTS   as section 3, plus
+                blendF        0.15     <- half-blend, fraction of total turns
+                Fpush         150      <- report only
+                NOTE there is no Stroke input - the groove always spans the
+                whole run, H - 2 x margin.
+
+    RESULT                     jaw travel   push    lead   lead ang   GRIP
+                fast  (upper)    24 mm      10.2 mm  30.4   28.3 deg    61 N
+                squeeze (lower)   6 mm       5.8 mm  79.4   54.5 deg   158 N
+                blend 28.1 deg of rotation
+                land 9.39 at the shallow lead, wrap 168.7 of 180
+
+    WHY. The jaws only need FORCE at the very end - for most of the travel they
+    are moving through air against nothing but the return springs. A constant
+    lead spends the stroke evenly and gives 80 N throughout. Spending most of
+    it on fast, cheap travel and the last part on a steep lead puts 158 N where
+    the cloth actually is - back to what the 15 mm build had.
+
+    THE IDENTITY IS NOT BROKEN, just spent unevenly. F x travel is still
+    2400 N.mm either way.
+
+    THE SQUEEZE IS AT THE BOTTOM. Pushing down closes the jaws, so the end of
+    the push is the low-z end of the groove. That is where the steep lead goes.
+
+    THE TRANSITION IS BLENDED. A step change in lead is a kink in the groove,
+    and a kink is what jams a follower pin. The lead ramps over blendF of the
+    rotation either side of the split, and the leads are then solved so the
+    stroke still comes out at exactly S with the blend included.
+
+    WATCH THE FAST PHASE'S LEAD ANGLE. At ForceRatio 2.61 it is 28.3 deg,
+    against the 25 deg below which the cam stops back-driving and the return
+    springs can no longer open the jaws. Raising ForceRatio buys grip by making
+    that phase shallower, so there is not much room left. The script warns.
 
 --------------------------------------------------------------------------------
 ## 4. FOLLOWER SLEEVE - oval                       (CamFollowerSleeve)
