@@ -6,7 +6,7 @@
 //  the housing wall.
 //
 //  IT DOES NOT HOLD THE GRIP. The grip is held by the pawl bearing on a tooth
-//  flank - 168 N in compression. All this spring does is keep the finger
+//  flank - 84 N in compression. All this spring does is keep the finger
 //  touching the wheel so it finds the next tooth. A few newtons is plenty, and
 //  a stiffer spring only makes the ratchet harder to push and the release
 //  lever heavier.
@@ -27,7 +27,7 @@
 // ===========================================================================
 //  THIS BUILD - 7 inputs to create on the component:
 //     WireDia 0.7   CoilOD 6.2   Coils 4   LegSpan 95.2
-//     LegA 8   LegB 7.5
+//     LegA 9   LegB 7.5
 //     BasePlane <- the RACK script's GearPlane
 //  Every constant below is already set for this build.
 //
@@ -199,7 +199,7 @@
     sb.AppendLine("wire stress         " + sig.ToString("0") + " MPa   vs " +
                   sAllow.ToString("0") + " allowable  (" + (sAllow / sig).ToString("0.#") + "x)");
     sb.AppendLine("--");
-    sb.AppendLine("The ratchet holds 168 N on the tooth flank. This spring is NOT");
+    sb.AppendLine("The ratchet holds 84 N on the tooth flank. This spring is NOT");
     sb.AppendLine("part of that load path - it only keeps the finger in contact.");
     if (log.Count > 0) { sb.AppendLine("--"); foreach (string t in log) sb.AppendLine("! " + t); }
 

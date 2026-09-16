@@ -1,9 +1,17 @@
 # MOP GRIPPER — MASTER SPEC
 Verified configuration. Every number below has been checked against the others.
 
-    Overall height   40 mm          Footprint   27.4 mm (the gear)
-    Jaw travel       15 mm          Grip force  160 N total, 80 N per rack
+    Overall height   44 mm          Footprint   27.4 mm (the gear)
+    Jaw travel       30 mm          Grip force  79 N total, 39 N per rack
     Push stroke      16 mm          Push force  150 N assumed
+
+    THE TRADE, AND IT IS NOT NEGOTIABLE:   F_rack x travel = F_push x stroke
+    Both sides are 2400 N.mm. Doubling the jaw travel from 15 to 30 therefore
+    HALVED the grip, 158 -> 79 N. No cam geometry avoids this - lead, diameter,
+    gear size and tooth count all cancel out of that identity. Only a longer
+    stroke or a harder push buys it back, and the stroke is what the 44 mm
+    height budget is already spent on.
+    Everything else got easier: every load in the machine halved with it.
 
 Wire the RACK script's `GearPlane` output into the `BasePlane` / `Pln` input of
 every other component. Everything then lands coaxial and correctly stacked.
@@ -34,7 +42,7 @@ every other component. Everything then lands coaxial and correctly stacked.
 
     RESULT      pitch 24.00   tip 27.36   root 20.61   form (TIF) ~21.6
                 undercut limit 15.10 teeth -> z16 clear
-                tooth stress 30 MPa Lewis, 45 MPa with the fillet factor (POM ~65)
+                tooth stress 15 MPa Lewis, 22 MPa with the fillet factor (POM ~65)
 
 --------------------------------------------------------------------------------
 ## 2. RACK  x2, opposed                              (InvoluteRackProfile)
@@ -63,7 +71,7 @@ every other component. Everything then lands coaxial and correctly stacked.
                 Stroke        0        <- 0 = groove spans the full run
                 GrooveWidth   4
                 GrooveDepth   2
-                RackTeeth     3.183    <- = 15 mm / (pi x 1.5)
+                RackTeeth     6.366    <- = 30 mm / (pi x 1.5)
                 GearTeeth     16
                 GearPlane     <- rack GearPlane
     CONSTANTS   mod           1.5
@@ -82,8 +90,14 @@ every other component. Everything then lands coaxial and correctly stacked.
                 endOverBot    0        <- same
 
     RESULT      body z 6..30, groove z 10..26, blind with hemispherical ends
-                turns 0.1989 (71.6 deg)   lead 80.4   lead angle 54.9 deg
-                land between passes 19.1   core radius 7.0 -> max bore 9.0
+                turns 0.3979 (143.2 deg)  lead 40.2   lead angle 35.4 deg
+                land between passes 12.4   core radius 7.0 -> max bore 9.0
+
+    THE 2-START CEILING. Each groove wraps turns x 360, and carries 25.5 deg of
+    its own width. Two starts collide when that exceeds 180 deg, so:
+        max turns 0.4293  ->  MAX JAW TRAVEL 32.4 mm
+    30 is close to that ceiling. More travel means dropping to one start, which
+    unbalances the pin load, or a bigger cam diameter.
 
 --------------------------------------------------------------------------------
 ## 4. FOLLOWER SLEEVE - oval                       (CamFollowerSleeve)
@@ -99,7 +113,7 @@ every other component. Everything then lands coaxial and correctly stacked.
                 BasePlane     <- rack GearPlane
     CONSTANTS   pinClr        0.2
                 starts        2        <- MUST equal the cam's starts
-                lead          80.4     <- from the cam report
+                lead          40.2     <- from the cam report
                 pinZ          4
                 hand          +1       <- match the cam
                 phi0          90       <- pins on the WAIST axis; cam phi0 must match
@@ -112,7 +126,7 @@ every other component. Everything then lands coaxial and correctly stacked.
     RESULT      oval 50 x 26 x 8, bore 18.5, waist wall 3.75
                 pin dia 3.8, ball tip 1.9, ball centre radius 9.0
                 ball-to-groove-bottom gap 0.10
-                130 N per pin: bearing 17.2 MPa, bending 27 MPa
+                92 N per pin: bearing 12.1 MPa, bending 19.1 MPa
 
     WHY OVAL    A spring rising from the base cannot reach a ROUND sleeve:
                 anything clearing the gear (radius 13.68) sits further out
@@ -318,15 +332,16 @@ every other component. Everything then lands coaxial and correctly stacked.
                 BasePlane     <- rack GearPlane
     CONSTANTS   mod           1.5      <- report only
                 zGear         16       <- report only
-                Treq          1.92     <- holding torque, report only
+                Treq          0.96     <- holding torque, report only
                 hand          +1       <- flip if it locks on the push
                 zOff          30       <- sits ON the cam top
 
     RESULT      wheel z 30..38, tip dia 24, root dia 22.40
                 tooth pitch 1.885, step 9.000 deg
                 ONE CLICK = 1.885 mm of rack (m1.5 z16)
-                pawl contact 168 N at 1.92 N.m
-                tooth bending 37.9 MPa on the 6 mm the pawl engages (POM ~65)
+                pawl contact 84 N at 0.96 N.m
+                tooth bending 19.0 MPa on the 6 mm the pawl engages (POM ~65)
+                15.9 clicks over the full 143.2 deg of travel
 
     WHY 8 THICK, STARTING AT 30. The pawl swings at z 32..38, so the teeth have
     to be there - but the cam tops out at 30, and a wheel starting at 32 would
@@ -357,15 +372,15 @@ every other component. Everything then lands coaxial and correctly stacked.
                 rootClr       0.15     <- under the finger, so it never bottoms
                 lockAng       8        <- MUST match the wheel's LockAngle
                 pegR/Dia/H    8 / 2 / 2   <- spring peg, on the tail
-                Treq          1.92
+                Treq          0.96
                 zOff          32       <- level with the wheel's upper 6 mm
 
     RESULT      pawl z 32..38, pivot at (16, 0)
                 arm 6.78 long, 5 wide, ending at radius 15.0
                 finger 1.20 wide, radius 11.35 .. 15.0 (tooth pitch 1.85)
                 SELF-ENGAGING - the tooth load drives the finger further in
-                contact force 168 N; 99.7% of it COMPRESSION along the arm,
-                  5.5 MPa, with only 12 N transverse
+                contact force 84 N; 99.7% of it COMPRESSION along the arm,
+                  2.8 MPa, with only 6 N transverse
                 tail tip at radius 23.16, angle -29.0 deg
                 spring peg at (18.84, -7.48), z 38..40
 
@@ -498,7 +513,7 @@ every other component. Everything then lands coaxial and correctly stacked.
                 wire 566 MPa vs 1700 allowable - 3.0x
 
     IT IS NOT IN THE LOAD PATH. The grip is held by the pawl bearing on a tooth
-    flank at 168 N. All the spring does is keep the finger touching the wheel
+    flank at 84 N. All the spring does is keep the finger touching the wheel
     so it finds the next tooth. A stiffer one only makes the ratchet notchy and
     the release lever heavy.
 
@@ -526,29 +541,30 @@ every other component. Everything then lands coaxial and correctly stacked.
 
         ratchet wheel  ->  pawl  ->  pin  ->  post  ->  webs  ->  shell
 
-    Contact force 168 N (= 1.92 N.m / 11.4 mm contact radius).
+    Contact force 84 N (= 0.96 N.m / 11.4 mm contact radius). It was 168 until
+    the jaw travel doubled; halving the grip halved the torque with it.
 
     WITH THE CONTACT AT 25 DEG the arm points almost straight at it, so 99.7%
-    of that runs ALONG the arm - 5.5 MPa of compression, with only 12 N trying
+    of that runs ALONG the arm - 2.8 MPa of compression, with only 6 N trying
     to bend it. That is the whole reason for the small contact angle.
 
     The same rotation, though, swings the PIN reaction from mostly radial to
-    mostly sideways: 70.0 N out toward the wall, 150.0 N across it. The webs
+    mostly sideways: 35.0 N out toward the wall, 75.0 N across it. The webs
     run radially, so they now take that load in BENDING rather than
     compression, and webW went 5 -> 7 to absorb it.
 
-        wheel tooth bending      37.9 MPa    POM ~65, on the 6 mm engaged
-        pawl arm compression      5.5 MPa    99.7% of 168 N over 5 x 6
-        pin double shear         10.5 MPa    METAL pin
-        pin bending             136    MPa   steel dowel, 9.4 unsupported
-        pin bearing in the pawl   8.8 MPa    6.0 mm of pawl
-        web compression           3.3 MPa    70.0 N over 2 x 7.0 x 1.8
-        web bending              32.7 MPa    150.0 N, 6.4 span, Z 14.7
+        wheel tooth bending      19.0 MPa    POM ~65, on the 6 mm engaged
+        pawl arm compression      2.8 MPa    99.7% of 84 N over 5 x 6
+        pin double shear          5.2 MPa    METAL pin
+        pin bending              68    MPa   steel dowel, 9.4 unsupported
+        pin bearing in the pawl   4.4 MPa    6.0 mm of pawl
+        web compression           1.4 MPa    35.0 N over 2 x 7.0 x 1.8
+        web bending              16.6 MPa    75.0 N, 6.4 span, Z 14.7
 
-    WEB BENDING IS STILL THE TIGHTEST NUMBER - 32.7 against POM's ~65, a
-    margin of 2.0. Everything else in plastic has 4x or better. If it needs
-    more, widen webW before anything else: the stress goes as 1/webW^2, so
-    5 -> 7 already took it from 64 to 33.
+    WEB BENDING IS STILL THE TIGHTEST NUMBER, but at 16.6 against POM's ~65 it
+    now has a margin of 3.9 rather than 2.0. webW 7 is no longer needed on
+    strength grounds - it is kept because dropping back to 5 would only save
+    2 mm of nothing, and the margin is cheap insurance on a printed part.
 
     A PRINTED 3.2 PIN WOULD SEE 10.5 MPa IN DOUBLE SHEAR, which sounds fine
     until you remember it is printed across the layers - and it now also spans
@@ -796,6 +812,11 @@ every other component. Everything then lands coaxial and correctly stacked.
 
     Wire needed for 1.92 N.m: 2.26 mm minimum.
 
+    AT THE DOUBLED JAW TRAVEL the torque is 0.96 N.m, not 1.92, so the numbers
+    above halve: root stress 2898 MPa against ~1700 yield, still over by 1.7x,
+    and the wire needed drops to 1.79 mm. The conclusion is unchanged - a
+    1.5 mm tang is still too small - but by less than it was.
+
         wire 1.5 -> 0.56 N.m  =  47 N of rack force
         wire 2.0 -> 1.34 N.m
         wire 2.5 -> 2.61 N.m  (coil OD 22.15, still fits the 26.8 bore)
@@ -841,8 +862,9 @@ every other component. Everything then lands coaxial and correctly stacked.
     16 mm - the stroke.
 
     Springs: 2 off, OD about 6, free length about 30, on the base pins at
-    radius 18. They also drive the jaws open, since the 54.9 deg lead angle
-    back-drives easily.
+    radius 18. They also drive the jaws open, since the 35.4 deg lead angle
+    back-drives easily - still well clear of the 25 deg jamming limit, though
+    less so than the 54.9 it was before the travel doubled.
 
 --------------------------------------------------------------------------------
 ## THE STACK
@@ -916,15 +938,15 @@ every other component. Everything then lands coaxial and correctly stacked.
 --------------------------------------------------------------------------------
 ## CHECKS — all with margin
 
-    gear tooth stress     45 MPa      POM ~65
+    gear tooth stress     22 MPa      POM ~65
     undercut limit        15.10       z16 clear
-    lead angle            54.9 deg    >25 needed, no jamming
-    land between passes   19.1 mm     >0 needed
-    pin bearing           17.2 MPa
-    pin bending           27 MPa
+    lead angle            35.4 deg    >25 needed, no jamming
+    land between passes   12.4 mm     >0 needed
+    pin bearing           12.1 MPa
+    pin bending           19.1 MPa
     cam max bore          9.0 mm      6 mm shaft used
     clutch hub pressure   15.1 MPa    limit 20
-    release force         2.2 N       holding 1.92 N.m
+    release force         1.1 N       holding 0.96 N.m  (wrap-spring build)
 
 --------------------------------------------------------------------------------
 ## OPEN ITEMS

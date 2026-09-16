@@ -48,7 +48,7 @@
     // --- match these to the cam script ---------------------------------------
     double pinClr = 0.2;          // pin-to-groove clearance
     int    starts = 2;            // groove starts on the cam
-    double lead   = 80.4;         // 'lead (rise/turn)' from the cam report
+    double lead   = 40.2;         // 'lead (rise/turn)' from the cam report
     double pinZ   = 4.0;          // pin height above the sleeve base
     double hand   = 1.0;          // +1 right-hand, must match the cam
     double phi0   = 90.0;         // pins on the WAIST axis. Must equal the cam's phi0.

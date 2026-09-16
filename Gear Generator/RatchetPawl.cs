@@ -80,7 +80,7 @@
                              // MUST match the spring's LegA.
     double pegDia  = 2.0;
     double pegH    = 2.0;    // up off the pawl top, into the spring's band
-    double Treq    = 1.92;   // holding torque [N.m], for the force report
+    double Treq    = 0.96;   // holding torque [N.m], for the force report
     double zOff    = 32.0;   // level with the ratchet wheel
 
     double tol = 0.001;

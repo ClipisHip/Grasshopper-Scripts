@@ -5,7 +5,7 @@
 //  ---------------------------------------------------------------------
 //  INPUTS (Item access):
 //     OuterDia    double  tip diameter
-//     Teeth       int     tooth count (60 gives ~1.9 mm rack steps on m1.5 z24)
+//     Teeth       int     tooth count (40 gives 1.885 mm rack steps on m1.5 z16)
 //     ToothDepth  double  radial depth of a tooth
 //     Thickness   double  extrusion thickness
 //     BoreDia     double  shaft bore
@@ -58,7 +58,7 @@
     // --- for the report only -------------------------------------------------
     double mod   = 1.5;    // gear module
     int    zGear = 16;     // gear teeth
-    double Treq  = 1.92;   // holding torque [N.m]
+    double Treq  = 0.96;   // holding torque [N.m]
     double hand  = 1.0;    // -1 mirrors the teeth if it locks the wrong way
     double zOff  = 30.0;   // sits ON the cam top, so the rotor stays one piece
 

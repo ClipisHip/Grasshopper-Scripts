@@ -33,7 +33,7 @@
 //  THIS BUILD - set on the component:
 //     Diameter 18   Height 24   Stroke 0
 //     GrooveWidth 4   GrooveDepth 2
-//     RackTeeth 3.183   GearTeeth 16
+//     RackTeeth 6.366   GearTeeth 16
 //     GearPlane <- the RACK script's GearPlane
 //  Every constant below is already set for this build.
 // ===========================================================================
@@ -54,7 +54,7 @@
     double H  = Height      > 1e-9 ? Height      : 24.0;
     double gw = GrooveWidth > 1e-9 ? GrooveWidth : 4.0;
     double gd = GrooveDepth > 1e-9 ? GrooveDepth : 2.0;
-    double nT = RackTeeth   > 1e-9 ? RackTeeth   : 3.183;
+    double nT = RackTeeth   > 1e-9 ? RackTeeth   : 6.366;   // = 30 mm / (pi x 1.5)
     int    zg = GearTeeth   > 2    ? GearTeeth   : 16;
 
     // --- match these to the gear / rack scripts ------------------------------
