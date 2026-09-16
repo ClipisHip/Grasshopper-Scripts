@@ -271,10 +271,10 @@
     // It also sits to one SIDE of the leg, on the side taking the reaction.
     {
       double aa = RhinoMath.ToRadians(ancPhi);
-      Point3d pin = new Point3d(pawlX, 0, 0);
+      Point3d pinPt = new Point3d(pawlX, 0, 0);
       Vector3d rad = new Vector3d(Math.Cos(aa), Math.Sin(aa), 0.0);
       Vector3d tng = Vector3d.CrossProduct(Vector3d.ZAxis, rad); tng.Unitize();
-      Brep anc = new Box(new Plane(pin, rad, tng),
+      Brep anc = new Box(new Plane(pinPt, rad, tng),
                          new Interval(ancIn, ancOut),
                          new Interval(-0.5 * ancW, 0.5 * ancW),
                          new Interval(pawlZhi, sprZhi)).ToBrep();
