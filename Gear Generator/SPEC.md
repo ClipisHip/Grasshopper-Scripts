@@ -293,7 +293,7 @@ every other component. Everything then lands coaxial and correctly stacked.
 ================================================================================
 #  RATCHET OPTION
 #
-#  Sections 12-14 replace the wrap spring (sections 5-8 and the RETAINER CAP's
+#  Sections 12-15 replace the wrap spring (sections 5-8 and the RETAINER CAP's
 #  collar duty) with a ratchet and pawl. Build ONE or the OTHER, never both.
 #  Sections 1-4 and 9 are shared unchanged; 10 and 11 need the small edits
 #  listed under WHAT THE RATCHET BUILD CHANGES ELSEWHERE.
@@ -346,32 +346,51 @@ every other component. Everything then lands coaxial and correctly stacked.
                 Teeth         40       <- MUST match the wheel
                 ToothDepth    0.8      <- MUST match the wheel
                 PivotDist     16       <- MUST equal the housing's pawlX
-                ContactAngle  60
+                ContactAngle  25
                 ArmWidth      5
                 Thickness     6
                 PivotHoleDia  3.2
                 TailLength    12
                 BasePlane     <- rack GearPlane
-    CONSTANTS   bossDia       0        <- 0 -> PivotHoleDia + 6 = 9.2
-                tipFrac       0.75     <- contact radius 11.4
+    CONSTANTS   bossDia       6.8      <- max is 2*(PivotDist - R) = 8.0
+                armClr        0.5      <- arm inner edge to the tip circle
+                rootClr       0.15     <- under the finger, so it never bottoms
+                lockAng       8        <- MUST match the wheel's LockAngle
+                pegR/Dia/H    8 / 2 / 2   <- spring peg, on the tail
                 Treq          1.92
                 zOff          32       <- level with the wheel's upper 6 mm
 
-    RESULT      pawl z 32..38, pivot at (16, 0), tip at (5.70, 9.87)
-                arm reach 14.267, tip width 1.16 (tooth pitch 1.789 at r11.4)
-                SELF-ENGAGING - the tooth load drives the tip further in
-                contact force 168 N at 1.92 N.m
-                tail tip at radius 26.02, angle -18.6 deg
+    RESULT      pawl z 32..38, pivot at (16, 0)
+                arm 6.78 long, 5 wide, ending at radius 15.0
+                finger 1.20 wide, radius 11.35 .. 15.0 (tooth pitch 1.85)
+                SELF-ENGAGING - the tooth load drives the finger further in
+                contact force 168 N; 99.7% of it COMPRESSION along the arm,
+                  5.5 MPa, with only 12 N transverse
+                tail tip at radius 23.16, angle -29.0 deg
+                spring peg at (18.84, -7.48), z 38..40
 
-    PivotDist 16 / ContactAngle 60 ARE NOT FREE. They are the shortest arm that
-    passes the self-engagement check: the tooth load has to drive the tip in,
-    not lever it out. 0 and 45 deg both FAIL - the Info output says which.
-    Sweeping the pair is the only way to find a working combination; do not
-    move the pivot without re-reading that line.
+    THE PAWL IS A HOOK, AND HAS TO BE. A straight arm from the pivot TO the
+    contact point can never clear the wheel: the perpendicular distance from
+    the centre to such a chord is at most the contact radius, which is inside
+    the tip circle BY DEFINITION. It is a bound, not a tuning problem - no
+    pivot position or contact angle escapes it. So the arm stops outside the
+    teeth at radius 15 and a narrow finger carries on down to 11.35.
 
-    The tail at -18.6 deg is what sets the housing's release gap at -19 deg.
-    Pushing the tail lifts the tip out and the rotor spins back under the
-    return springs.
+    The first build had all three features cutting the wheel: boss 0.60 in,
+    finger 0.40 past the root, and the arm 3.43 deep through the body of it.
+    The Info output now prints all three clearances; they must stay positive.
+
+    CONTACT 25 DEG, NOT 60. Self-engagement flips sense near 44 deg, where the
+    contact force line passes through the pivot. Both sides work. Below it the
+    arm points almost straight at the contact, so the load is compression
+    rather than bending and the whole pawl is far more compact.
+    The self-engagement test uses the REAL undercut locking face - the first
+    version assumed a tangential load and ignored LockAngle entirely, which is
+    what the undercut is for.
+
+    The tail at -29.0 deg is what sets the housing's release gap. Pushing the
+    tail lifts the finger out and the rotor spins back under the return
+    springs; the spring below pushes it the other way.
 
 --------------------------------------------------------------------------------
 ## 14. HOUSING - RATCHET VARIANT                   (HousingRatchet.cs)
@@ -383,9 +402,9 @@ every other component. Everything then lands coaxial and correctly stacked.
     INPUTS      BoreWaist     26.8
                 BoreLength    50.8
                 WallThk       2
-                Height        42       <- was 44; no collar to house
+                Height        44       <- 42 + the spring's own band
                 BellyWaist    36
-                RelSlotDeg    -19      <- on the pawl tail's line
+                RelSlotDeg    -29      <- on the pawl tail's line
                 RackSlotW     7
                 RackSlotH     7
                 BasePlane     <- rack GearPlane
@@ -403,18 +422,33 @@ every other component. Everything then lands coaxial and correctly stacked.
                 pawlX         16       <- MUST equal the pawl's PivotDist
                 postDia       6        <- r3 vs the r12 wheel -> 1.0 clear
                 pinDia        3.2      <- USE A METAL PIN
-                postZlo/Zhi   30 / 40
+                postZlo/Zhi   30 / 44
                 pawlZlo/Zhi   31.8 / 38.2   <- 6.4 gap for the 6.0 pawl
-                webW          5
-                relW          8
+                sprZhi        41.2     <- top of the SPRING band
+                webW          7        <- was 5; see the load path
+                relW/relIn    8 / 5
                 relZlo/Zhi    31 / 39
+                ancPhi        -1.97    <- spring rib, FROM THE PIN
+                ancIn/ancOut  4 / 11.5 <- also from the pin
+                ancW          4        <- half of this = the spring's ancHalf
                 zOff          0
 
-    RESULT      upper  z 7..42   bore 50.8 x 26.8,  outer 54.8 x 30.8
+    RESULT      upper  z 7..44   bore 50.8 x 26.8,  outer 54.8 x 30.8
                 belly  z 0..7    bore 50.8 x 36.0,  outer 54.8 x 40.0
-                post dia 6 at (16, 0), z 30..40, clear of the wheel by 1.0
+                post dia 6 at (16, 0), clear of the wheel by 1.0
                 pawl swings in z 31.8..38.2 - 0.2 clearance each face
-                release gap 8 wide at -19 deg, z 31..39, out through the wall
+                release gap 8 wide at -29 deg, z 31..39, out through the wall
+
+    FOUR BANDS UP THE POST, and the post exists in only two of them:
+        z 30   .. 31.8   post + lower web
+        z 31.8 .. 38.2   PAWL swings          - post absent
+        z 38.2 .. 41.2   SPRING coil          - post absent
+        z 41.2 .. 44     post + upper web
+    The post was originally one column from 30 to 40, straight through the
+    pawl's band - which a pawl with a 3.2 bore cannot pass. It is absent in
+    the spring's band too: a coil whose bore closes to 4.69 will not go over a
+    6.0 post. Only the METAL PIN crosses both, 9.4 mm unsupported, which is
+    136 MPa and 0.004 mm of sag in a steel dowel.
 
     WHY THE WEB IS SPLIT. The pivot sits at x 16; the bore wall on that line is
     at 25.4, so the post floats 9.4 mm out in mid-air and needs a web to hold
@@ -428,32 +462,97 @@ every other component. Everything then lands coaxial and correctly stacked.
     they are unioned AFTER the bore is cut. Union them first and the bore cut
     swallows them again. The pin hole is cut LAST, through the finished post.
 
-    NO PART OF THIS IS A STOP. The pawl is held in the teeth by a spring that
-    is still missing - see the open items below.
+    THE UPPER WEB HEIGHT IS NOT SPARE. It carries half the pin load in
+    bending, and needs about 1.8 mm. That is why making room for the spring
+    cost 2 mm of overall height rather than being absorbed: the web had to move
+    ABOVE the coil, not be thinned to share the space with it.
+
+--------------------------------------------------------------------------------
+## 15. PAWL SPRING                                 (PawlSpring.cs)
+
+    INPUTS      WireDia       0.7
+                CoilOD        6.2
+                Coils         4        <- whole turns, before the leg span
+                LegSpan       95.2     <- INSTALLED included angle [deg]
+                LegA          9        <- to the pawl peg
+                LegB          7.5      <- to the housing rib
+                BasePlane     <- rack GearPlane
+    CONSTANTS   pinX          16       <- MUST match the pawl's PivotDist
+                pinDia        3.2
+                zOff          38.2     <- its own band, above the pawl
+                aA            -78.91   <- lower leg, FROM THE PIN
+                pegRad        1.0      <- must match the pawl's peg
+                ancHalf       2.0      <- must match half the housing's ancW
+                windUp        35       <- how far it is wound OPEN to fit
+                armRch        6.78     <- pawl arm reach, for the force report
+                hand          +1
+                E / sAllow    207000 / 1700   <- music wire, ASTM A228
+
+    ORDER       0.7 music wire, OD 6.2, ID 4.8, 4.264 active turns,
+                FREE leg span 60.2 deg, radial legs 9 and 7.5
+
+    RESULT      coil z 38.2 .. 41.19 (2.99 tall), bore closes to 4.69 on the
+                  3.2 pin
+                rate 196.2 N.mm/rev -> 19.1 N.mm at 35 deg of wind-up
+                2.81 N at the finger, 2.38 N on the peg
+                wire 566 MPa vs 1700 allowable - 3.0x
+
+    IT IS NOT IN THE LOAD PATH. The grip is held by the pawl bearing on a tooth
+    flank at 168 N. All the spring does is keep the finger touching the wheel
+    so it finds the next tooth. A stiffer one only makes the ratchet notchy and
+    the release lever heavy.
+
+    DIRECTION IS THE WHOLE POINT. +ve rotation about the pivot drives the
+    finger IN, so the spring must pull its legs TOGETHER - fitted wound OPEN by
+    35 deg. Fitted the other way it holds the pawl OFF the wheel. That looks
+    almost identical in CAD and does nothing at all on the bench.
+
+    WHY NOT A LEAF. There is no room in-plane. At pawl level the bore wall
+    closes from radius 22.6 at -29 deg to 16.4 at -54 deg, and a printed leaf
+    needs about 12 mm of length to stay under 25 MPa and not creep. Around the
+    pin is the one axis with space left.
+
+    TWO ALIGNMENT TRAPS, both of which draw convincingly and do not work:
+      1. A radial leg aimed straight AT its anchor runs THROUGH it. Each leg
+         lies alongside instead, offset by wire radius + anchor radius, and
+         bears on the flank. Hence aA -78.91 for a peg at -69.20.
+      2. The legs are radial FROM THE PIN at x 16. An anchor laid out on a
+         WHEEL-AXIS radial misses them entirely. ancPhi is from the pin.
+    The spring's report prints both anchor positions; take them from there
+    rather than re-deriving.
 
 --------------------------------------------------------------------------------
 ## RATCHET LOAD PATH - every number
 
         ratchet wheel  ->  pawl  ->  pin  ->  post  ->  webs  ->  shell
 
-    Contact force 168 N (= 1.92 N.m / 11.4 mm contact radius). At the pivot
-    that resolves into 145.9 N radially OUTWARD, toward the wall, and 84.2 N
-    sideways - which is why the webs run radially: the big component is pure
-    compression along them.
+    Contact force 168 N (= 1.92 N.m / 11.4 mm contact radius).
 
-        wheel tooth bending      37.9 MPa    POM ~65
+    WITH THE CONTACT AT 25 DEG the arm points almost straight at it, so 99.7%
+    of that runs ALONG the arm - 5.5 MPa of compression, with only 12 N trying
+    to bend it. That is the whole reason for the small contact angle.
+
+    The same rotation, though, swings the PIN reaction from mostly radial to
+    mostly sideways: 70.0 N out toward the wall, 150.0 N across it. The webs
+    run radially, so they now take that load in BENDING rather than
+    compression, and webW went 5 -> 7 to absorb it.
+
+        wheel tooth bending      37.9 MPa    POM ~65, on the 6 mm engaged
+        pawl arm compression      5.5 MPa    99.7% of 168 N over 5 x 6
         pin double shear         10.5 MPa    METAL pin
+        pin bending             136    MPa   steel dowel, 9.4 unsupported
         pin bearing in the pawl   8.8 MPa    6.0 mm of pawl
-        pin bearing in the webs  14.6 MPa    3.6 mm of web, 1.8 each
-        web compression           8.1 MPa    145.9 N over 2 x 5.0 x 1.8
-        web bending              35.9 MPa    84.2 N, 6.4 span, Z 7.50
+        web compression           3.3 MPa    70.0 N over 2 x 7.0 x 1.8
+        web bending              32.7 MPa    150.0 N, 6.4 span, Z 14.7
 
-    WEB BENDING IS THE TIGHTEST NUMBER IN THE RATCHET - 35.9 against POM's ~65,
-    a margin of 1.8. Everything else has 4x or better. If it needs more, widen
-    webW before anything else: the stress goes as 1/webW^2.
+    WEB BENDING IS STILL THE TIGHTEST NUMBER - 32.7 against POM's ~65, a
+    margin of 2.0. Everything else in plastic has 4x or better. If it needs
+    more, widen webW before anything else: the stress goes as 1/webW^2, so
+    5 -> 7 already took it from 64 to 33.
 
     A PRINTED 3.2 PIN WOULD SEE 10.5 MPa IN DOUBLE SHEAR, which sounds fine
-    until you remember it is printed across the layers. Use a metal pin - a
+    until you remember it is printed across the layers - and it now also spans
+    9.4 mm unsupported between the two webs at 136 MPa. Use a metal pin - a
     3 mm dowel or a cut-down M3 - and drill the post 3.2.
 
 --------------------------------------------------------------------------------
@@ -468,8 +567,9 @@ every other component. Everything then lands coaxial and correctly stacked.
     RetainerCap rotorTop   constant     40              38
     RetainerCap collarOD   constant     24.95           22.40
 
-    ShaftLen 42 - the cap now lands at z 38.3..41.3, so the shaft reaches 42
-    and finishes flush with the top of the 42 housing.
+    ShaftLen 42 - the cap lands at z 38.3..41.3, so the shaft reaches 42. The
+    housing is 44 tall, so the shaft now finishes 2 below its rim rather than
+    flush with it. That is fine - nothing bears on the shaft top.
 
     CapDia 20 - there is no collar to retain, only the rotor, whose top is the
     wheel's 22.40 root dia. A 20 cap still covers that rim with room to spare,
@@ -490,13 +590,10 @@ every other component. Everything then lands coaxial and correctly stacked.
 --------------------------------------------------------------------------------
 ## RATCHET OPEN ITEMS
 
-    1. THE PAWL SPRING IS STILL MISSING. Nothing currently holds the tip into
-       the teeth, and a pawl resting on nothing does not ratchet. It needs only
-       a gentle load - the self-engagement geometry does the rest once a tooth
-       is caught. A small torsion spring over the 3.2 pin, one leg on the tail
-       and one on the shell, is the obvious answer, but it is not modelled and
-       there is no anchor feature for it in HousingRatchet.cs yet.
-       NOTHING SHOULD BE PRINTED FOR A FUNCTIONAL TEST UNTIL THIS IS RESOLVED.
+    1. PAWL SPRING - SOLVED, see section 15. Torsion spring around the pin,
+       peg on the pawl tail, rib in the housing. The one thing left to get
+       right is which way round it goes: it must be wound OPEN to fit, so that
+       it pulls its legs together.
 
     2. RIB / WEB COPLANAR FACE. The rib at angle 0 tops out at z 30 and the
        lower web starts at z 30, overlapping over about 4.2 x 5.0 mm. They are
@@ -511,13 +608,19 @@ every other component. Everything then lands coaxial and correctly stacked.
        locks on the first push, flip `hand` on the cam - or on the wheel, which
        mirrors the teeth instead.
 
-    4. PIN RETENTION. The script cuts ONE 3.2 hole straight through post, webs
+    4. SPRING HAND. The coil must be wound so that opening it by 35 deg
+       stores energy in the closing direction. Get this wrong and it holds the
+       pawl clear of the wheel - which looks right in CAD and ratchets not at
+       all. Check it by hand before assembly: squeeze the legs together and the
+       spring should resist.
+
+    5. PIN RETENTION. The script cuts ONE 3.2 hole straight through post, webs
        and all, so a 3.0 dowel is +0.2 loose in the webs as well as in the
        pawl - nothing stops it walking out sideways. Either drill the webs
        2.9 for a press fit and leave the pawl at 3.2, or use a pin with a head
        or an E-clip groove. Not a load problem, just a fall-out problem.
 
-    5. RESOLUTION. One click is 1.885 mm at the rack, so the grip lands
+    6. RESOLUTION. One click is 1.885 mm at the rack, so the grip lands
        somewhere in a 1.885 mm band rather than exactly where the user stopped
        pushing. Cloth compresses far more than that, so this is expected to be
        invisible in use - but it is the one thing the wrap spring did better,
@@ -745,20 +848,25 @@ every other component. Everything then lands coaxial and correctly stacked.
 ## THE STACK
 
     WRAP SPRING BUILD                   RATCHET BUILD
-    z 40 ---- rotor top                 z 42 ---- housing top, shaft flush
+    z 40 ---- rotor top                 z 44 ---- housing top
     z 30..40  hub, dia 17.15            z 38.3..41.3  cap, dia 20
-       (spring 31..38.5,                z 38..40  upper web
+       (spring 31..38.5,                z 38..40  pawl's spring peg
         collar 36..40)                  z 32..38  pawl, in the wheel's teeth
                                         z 30..38  ratchet wheel, dia 24
+                                        z 41.2..44  upper web
+                                        z 38.2..41.2 PAWL SPRING coil
     z 30      sleeve top, full travel   z 30..31.8 lower web
     z  6..30  cam, dia 18               z 30      sleeve top, full travel
               (groove 10..26)           z  6..30  cam, dia 18 (groove 10..26)
     z  0..6   gear, tip dia 27.36       z  0..6   gear, tip dia 27.36
     z  0      gear plane = rack GearPlane origin, both builds
 
-    The ratchet build is 2 mm SHORTER overall (42 vs 44 housing) despite
-    stacking more parts, because the wheel shares the 30..38 band with the
-    pawl instead of the hub and collar needing separate levels.
+    Both builds are 44 tall. The ratchet was 42 until the pawl spring needed
+    its own 3 mm band: the coil goes above the pawl and the upper web above the
+    coil, because that web carries half the pin load in bending and cannot be
+    thinned to share. Thinning the PAWL to 4 instead would have made room, but
+    it would also have cut the engaged tooth width and pushed wheel bending
+    from 38 to 57 MPa against POM's 65.
 
     ONE MOULDED ROTOR = gear + cam + hub, single 6.4 bore throughout on a
     6.0 shaft. Union gear.Solid + cam.Body + hub.Body.
@@ -792,6 +900,10 @@ every other component. Everything then lands coaxial and correctly stacked.
     wheel tip 24.00       housing waist 26.80  +2.80   wheel turns
     post 6.00 at x16      wheel tip r 12.00    +1.00   post clears the wheel
     cap 20.00             web inner edge x13   +3.00   cap clears the web
+    pin 3.00 metal        coil bore 4.69       +1.69   coil rides the pin
+    coil OD 6.20          post dia 6.00        -       post ABSENT in that band
+    leg wire r 0.35       peg flank            0.00    touching, by design
+    leg wire r 0.35       rib face             0.00    touching, by design
 
     The shaft fit was 6.00 into 6.00 - no clearance at all on the one surface
     the whole rotor turns on. The clearance is put in the BORE, not the shaft,
