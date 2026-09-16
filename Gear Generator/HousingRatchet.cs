@@ -20,7 +20,7 @@
 // ===========================================================================
 //  THIS BUILD - 8 inputs to create on the component:
 //     BoreWaist 26.8   BoreLength 50.8   WallThk 2   Height 42
-//     BellyWaist 36    RelSlotDeg -19    RackSlotW 7   RackSlotH 7
+//     BellyWaist 36    RelSlotDeg -29    RackSlotW 7   RackSlotH 7
 //     BasePlane <- the RACK script's GearPlane
 //  Every constant below is already set for this build.
 // ===========================================================================
@@ -40,7 +40,7 @@
     double wt = WallThk      > 1e-9 ? WallThk      :  2.0;
     double Hh = Height       > 1e-9 ? Height       : 42.0;
     double Yw = BellyWaist   > 1e-9 ? BellyWaist   : 36.0;
-    double rel = Math.Abs(RelSlotDeg) > 1e-9 ? RelSlotDeg : -19.0;
+    double rel = Math.Abs(RelSlotDeg) > 1e-9 ? RelSlotDeg : -29.0;   // pawl tail's line
     double rw = RackSlotW    > 1e-9 ? RackSlotW    :  7.0;
     double rh = RackSlotH    > 1e-9 ? RackSlotH    :  7.0;
 
@@ -71,10 +71,16 @@
     double postZhi  = 40.0;
     double pawlZlo  = 31.8;   // the gap the pawl swings in - pawl is 6 thick
     double pawlZhi  = 38.2;   // at z 32..38, so 0.2 clearance each face
-    double webW     = 5.0;    // web width, tangential
+    double webW     = 7.0;    // web width, tangential. Was 5.0 - with the pawl at
+                              // 25 deg the pin reaction swings mostly SIDEWAYS
+                              // (70 N radial, 150 N across), which BENDS the webs.
+                              // Stress goes as 1/webW^2: 5.0 -> 64 MPa, 7.0 -> 33.
 
     // --- release gap ---------------------------------------------------------
     double relW     = 8.0;    // wide enough for the tail plus its small swing
+    double relIn    = 5.0;    // how far INSIDE the lobe the gap starts. The tail
+                              // tip only reaches radius 23.16 and the wall is at
+                              // 22.57, so the cut has to start inboard of both.
     double relZlo   = 31.0;
     double relZhi   = 39.0;
 
@@ -182,7 +188,7 @@
       Vector3d rad = new Vector3d(Math.Cos(ra), Math.Sin(ra), 0.0);
       Vector3d tng = Vector3d.CrossProduct(Vector3d.ZAxis, rad); tng.Unitize();
       cut.Add(new Box(new Plane(Point3d.Origin, rad, tng),
-                      new Interval(lobeB - 2.0, lobeB + wt + 6.0),
+                      new Interval(lobeB - relIn, lobeB + wt + 6.0),
                       new Interval(-0.5 * relW, 0.5 * relW),
                       new Interval(relZlo, relZhi)).ToBrep());
     }
@@ -217,11 +223,16 @@
       inward.Add(rb);
     }
 
-    // the post, and the two webs that hold it - below and above the pawl
-    Brep post = new Cylinder(new Circle(new Plane(new Point3d(pawlX, 0, postZlo), Vector3d.ZAxis),
-                                        0.5 * postDia), postZhi - postZlo).ToBrep(true, true);
-    if (post.SolidOrientation == BrepSolidOrientation.Inward) post.Flip();
-    inward.Add(post);
+    // THE POST IS SPLIT TOO, not just the webs. A single column from postZlo to
+    // postZhi would fill the very gap the pawl swings in - the pawl has a 3.2
+    // bore and could not pass a 6.0 column. Only the METAL PIN crosses the gap.
+    Brep postLo = new Cylinder(new Circle(new Plane(new Point3d(pawlX, 0, postZlo), Vector3d.ZAxis),
+                                          0.5 * postDia), pawlZlo - postZlo).ToBrep(true, true);
+    Brep postHi = new Cylinder(new Circle(new Plane(new Point3d(pawlX, 0, pawlZhi), Vector3d.ZAxis),
+                                          0.5 * postDia), postZhi - pawlZhi).ToBrep(true, true);
+    if (postLo.SolidOrientation == BrepSolidOrientation.Inward) postLo.Flip();
+    if (postHi.SolidOrientation == BrepSolidOrientation.Inward) postHi.Flip();
+    inward.Add(postLo); inward.Add(postHi);
 
     Plane wp = new Plane(Point3d.Origin, Vector3d.XAxis, Vector3d.YAxis);
     Brep webLo = new Box(wp, new Interval(pawlX - 0.5 * postDia, lobeB + wt),
@@ -273,8 +284,11 @@
                   ribZhi.ToString("0.##"));
     sb.AppendLine("--");
     sb.AppendLine("PAWL POST           dia " + postDia.ToString("0.###") + " at (" +
-                  pawlX.ToString("0.##") + ", 0), z " + postZlo.ToString("0.##") + " .. " +
+                  pawlX.ToString("0.##") + ", 0), SPLIT: z " + postZlo.ToString("0.##") + ".." +
+                  pawlZlo.ToString("0.##") + " and " + pawlZhi.ToString("0.##") + ".." +
                   postZhi.ToString("0.##"));
+    sb.AppendLine("  only the PIN crosses the pawl's band - a solid post there");
+    sb.AppendLine("  would not pass the pawl's 3.2 bore.");
     sb.AppendLine("  pin hole          " + pinDia.ToString("0.###") + " - USE A METAL PIN");
     sb.AppendLine("  clear of wheel    " + (pawlX - 0.5 * postDia - 12.0).ToString("0.##"));
     sb.AppendLine("  webs              z " + postZlo.ToString("0.##") + ".." + pawlZlo.ToString("0.##") +
