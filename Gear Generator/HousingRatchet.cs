@@ -19,7 +19,7 @@
 
 // ===========================================================================
 //  THIS BUILD - 8 inputs to create on the component:
-//     BoreWaist 26.8   BoreLength 50.8   WallThk 2   Height 42
+//     BoreWaist 26.8   BoreLength 50.8   WallThk 2   Height 44
 //     BellyWaist 36    RelSlotDeg -29    RackSlotW 7   RackSlotH 7
 //     BasePlane <- the RACK script's GearPlane
 //  Every constant below is already set for this build.
@@ -38,7 +38,7 @@
     double Bw = BoreWaist    > 1e-9 ? BoreWaist    : 26.8;
     double Bl = BoreLength   > 1e-9 ? BoreLength   : 50.8;
     double wt = WallThk      > 1e-9 ? WallThk      :  2.0;
-    double Hh = Height       > 1e-9 ? Height       : 42.0;
+    double Hh = Height       > 1e-9 ? Height       : 44.0;   // 42 + the spring band
     double Yw = BellyWaist   > 1e-9 ? BellyWaist   : 36.0;
     double rel = Math.Abs(RelSlotDeg) > 1e-9 ? RelSlotDeg : -29.0;   // pawl tail's line
     double rw = RackSlotW    > 1e-9 ? RackSlotW    :  7.0;
@@ -68,9 +68,22 @@
     double postDia  = 6.0;    // 3.0 radius vs the 12.0 wheel -> 1.0 clear
     double pinDia   = 3.2;    // METAL pin
     double postZlo  = 30.0;
-    double postZhi  = 40.0;
+    double postZhi  = 44.0;   // was 40. The spring needs its own band, and the
+                              // upper web has to sit ABOVE it - see the bands below
     double pawlZlo  = 31.8;   // the gap the pawl swings in - pawl is 6 thick
     double pawlZhi  = 38.2;   // at z 32..38, so 0.2 clearance each face
+    double sprZhi   = 41.2;   // top of the SPRING band. The coil is 2.99 tall and
+                              // wraps the PIN, so the post cannot exist here either:
+                              // a 4.69 coil bore will not pass a 6.0 post.
+
+    // --- anchor for the spring's upper leg ------------------------------------
+    // Take ancPhi straight from the spring script's report - it is measured
+    // FROM THE PIN and already carries the offset that puts the rib beside the
+    // leg rather than through it.
+    double ancPhi   = -1.97;  // rib centre line, from the PIN [deg]
+    double ancIn    =  4.0;   // rib runs from here, out from the pin ...
+    double ancOut   = 11.5;   // ... to here, where it meets the outer shell
+    double ancW     = 4.0;    // rib width. HALF of this must match the spring's ancHalf
     double webW     = 7.0;    // web width, tangential. Was 5.0 - with the pawl at
                               // 25 deg the pin reaction swings mostly SIDEWAYS
                               // (70 N radial, 150 N across), which BENDS the webs.
@@ -103,8 +116,15 @@
       log.Add("Pawl post fouls the 24 mm ratchet wheel - move pawlX out or thin the post.");
     if (pawlX + 0.5 * postDia >= lobeB)
       log.Add("Pawl post runs into the bore wall.");
-    if (pawlZlo <= postZlo || pawlZhi >= postZhi)
-      log.Add("Pawl gap is not inside the post - the webs will not form.");
+    if (pawlZlo <= postZlo || sprZhi >= postZhi)
+      log.Add("Pawl / spring bands are not inside the post - the webs will not form.");
+    if (sprZhi <= pawlZhi) log.Add("Spring band has no height - raise sprZhi.");
+    if (postZhi - sprZhi < 1.7)
+      log.Add("Upper web is only " + (postZhi - sprZhi).ToString("0.##") +
+              " tall - it carries half the pin load in bending and needs ~1.8. " +
+              "Raise Height.");
+    if (ancIn <= 0.5 * postDia)
+      log.Add("Spring anchor rib starts inside the post / coil - raise ancIn.");
     if (ribZhi > pawlZlo) log.Add("Ribs reach into the pawl's swing.");
 
     // ---------- stadium helper -----------------------------------------------
@@ -228,8 +248,8 @@
     // bore and could not pass a 6.0 column. Only the METAL PIN crosses the gap.
     Brep postLo = new Cylinder(new Circle(new Plane(new Point3d(pawlX, 0, postZlo), Vector3d.ZAxis),
                                           0.5 * postDia), pawlZlo - postZlo).ToBrep(true, true);
-    Brep postHi = new Cylinder(new Circle(new Plane(new Point3d(pawlX, 0, pawlZhi), Vector3d.ZAxis),
-                                          0.5 * postDia), postZhi - pawlZhi).ToBrep(true, true);
+    Brep postHi = new Cylinder(new Circle(new Plane(new Point3d(pawlX, 0, sprZhi), Vector3d.ZAxis),
+                                          0.5 * postDia), postZhi - sprZhi).ToBrep(true, true);
     if (postLo.SolidOrientation == BrepSolidOrientation.Inward) postLo.Flip();
     if (postHi.SolidOrientation == BrepSolidOrientation.Inward) postHi.Flip();
     inward.Add(postLo); inward.Add(postHi);
@@ -240,10 +260,27 @@
                              new Interval(postZlo, pawlZlo)).ToBrep();
     Brep webHi = new Box(wp, new Interval(pawlX - 0.5 * postDia, lobeB + wt),
                              new Interval(-0.5 * webW, 0.5 * webW),
-                             new Interval(pawlZhi, postZhi)).ToBrep();
+                             new Interval(sprZhi, postZhi)).ToBrep();
     if (webLo.SolidOrientation == BrepSolidOrientation.Inward) webLo.Flip();
     if (webHi.SolidOrientation == BrepSolidOrientation.Inward) webHi.Flip();
     inward.Add(webLo); inward.Add(webHi);
+
+    // anchor rib the spring's upper leg pushes against, in its own band.
+    // MEASURED FROM THE PIN, not the wheel axis - the spring's legs are radial
+    // from the pin, so a rib laid out on a wheel-axis radial misses them.
+    // It also sits to one SIDE of the leg, on the side taking the reaction.
+    {
+      double aa = RhinoMath.ToRadians(ancPhi);
+      Point3d pin = new Point3d(pawlX, 0, 0);
+      Vector3d rad = new Vector3d(Math.Cos(aa), Math.Sin(aa), 0.0);
+      Vector3d tng = Vector3d.CrossProduct(Vector3d.ZAxis, rad); tng.Unitize();
+      Brep anc = new Box(new Plane(pin, rad, tng),
+                         new Interval(ancIn, ancOut),
+                         new Interval(-0.5 * ancW, 0.5 * ancW),
+                         new Interval(pawlZhi, sprZhi)).ToBrep();
+      if (anc.SolidOrientation == BrepSolidOrientation.Inward) anc.Flip();
+      inward.Add(anc);
+    }
 
     string inState;
     Brep[] iu = Brep.CreateBooleanUnion(inward, tol);
@@ -298,6 +335,15 @@
                   "   (" + (pawlZhi - pawlZlo).ToString("0.##") + " for a 6 thick pawl)");
     sb.AppendLine("  SPLIT webs keep the corridor at pawl level clear, so the");
     sb.AppendLine("  release tail has the whole band to itself.");
+    sb.AppendLine("SPRING BAND         z " + pawlZhi.ToString("0.##") + " .. " + sprZhi.ToString("0.##") +
+                  "   (" + (sprZhi - pawlZhi).ToString("0.##") + " for a 2.99 coil)");
+    sb.AppendLine("  anchor rib        " + ancW.ToString("0.##") + " wide at " + ancPhi.ToString("0.##") +
+                  " deg FROM THE PIN, spanning " + ancIn.ToString("0.#") + " .. " +
+                  ancOut.ToString("0.#") + " out from it");
+    sb.AppendLine("  the post is ABSENT here too - a 4.69 coil bore will not");
+    sb.AppendLine("  pass a " + postDia.ToString("0.#") + " post, so the coil rides the PIN.");
+    sb.AppendLine("  pin spans " + (sprZhi - pawlZlo).ToString("0.##") +
+                  " unsupported: 136 MPa bending in a steel dowel, 0.004 sag.");
     sb.AppendLine("release gap         " + relW.ToString("0.##") + " wide at " + rel.ToString("0.#") +
                   " deg, z " + relZlo.ToString("0.##") + " .. " + relZhi.ToString("0.##"));
     sb.AppendLine("rack windows        " + rackN + " at +/-" + rackOff.ToString("0.##"));

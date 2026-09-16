@@ -76,6 +76,10 @@
     double armClr  = 0.5;    // gap between the arm's inner edge and the tip circle
     double rootClr = 0.15;   // gap under the finger, so it never bottoms out
     double lockAng = 8.0;    // MUST match the wheel's LockAngle
+    double pegR    = 8.0;    // spring peg, along the TAIL from the pivot.
+                             // MUST match the spring's LegA.
+    double pegDia  = 2.0;
+    double pegH    = 2.0;    // up off the pawl top, into the spring's band
     double Treq    = 1.92;   // holding torque [N.m], for the force report
     double zOff    = 32.0;   // level with the ratchet wheel
 
@@ -194,6 +198,29 @@
     Brep body = ex.ToBrep();
     if (body.SolidOrientation == BrepSolidOrientation.Inward) body.Flip();
 
+    // ---------- peg for the spring's lower leg --------------------------------
+    // Stands up off the TAIL, into the spring's own band above the pawl. The
+    // leg is radial from the pin, so the peg sits on the tail centreline at
+    // pegR from the pivot - which is what fixes the spring's aA angle.
+    if (pegDia > 1e-9 && pegH > 1e-9)
+    {
+      if (pegR + 0.5 * pegDia > tl)
+        log.Add("Spring peg at " + pegR.ToString("0.##") + " runs off the end of a " +
+                tl.ToString("0.##") + " tail - lengthen TailLength.");
+      Point3d pg = P0 - u * pegR;
+      Brep peg = new Cylinder(new Circle(new Plane(new Point3d(pg.X, pg.Y, th), Vector3d.ZAxis),
+                                         0.5 * pegDia), pegH).ToBrep(true, true);
+      if (peg.SolidOrientation == BrepSolidOrientation.Inward) peg.Flip();
+      Brep[] pu = Brep.CreateBooleanUnion(new List<Brep>() { body, peg }, tol);
+      if (pu != null && pu.Length > 0)
+      {
+        Brep best = pu[0]; double bv = -1.0;
+        foreach (Brep b in pu) { double v = b.GetBoundingBox(true).Volume; if (v > bv) { bv = v; best = b; } }
+        body = best;
+      }
+      else log.Add("Spring peg union failed.");
+    }
+
     Brep hole = new Cylinder(new Circle(new Plane(new Point3d(P0.X, P0.Y, -1.0), Vector3d.ZAxis),
                                         0.5 * ph), th + 2.0).ToBrep(true, true);
     Brep[] diff = Brep.CreateBooleanDifference(body, hole, tol);
@@ -246,6 +273,16 @@
     sb.AppendLine("TAIL TIP            radius " + tTip.DistanceTo(Point3d.Origin).ToString("0.###") +
                   " at " + RhinoMath.ToDegrees(Math.Atan2(tTip.Y, tTip.X)).ToString("0.#") + " deg");
     sb.AppendLine("  -> set the housing's RelSlotDeg to that angle.");
+    if (pegDia > 1e-9)
+    {
+      Point3d pgr = P0 - u * pegR;
+      sb.AppendLine("SPRING PEG          dia " + pegDia.ToString("0.##") + " at (" +
+                    pgr.X.ToString("0.##") + ", " + pgr.Y.ToString("0.##") + "), z " +
+                    (zOff + th).ToString("0.##") + " .. " + (zOff + th + pegH).ToString("0.##"));
+      sb.AppendLine("  = " + pegR.ToString("0.##") + " from the pin at " +
+                    RhinoMath.ToDegrees(Math.Atan2(-u.Y, -u.X)).ToString("0.#") +
+                    " deg -> the spring's LegA / aA.");
+    }
     sb.AppendLine("--");
     sb.AppendLine("A spring must hold the finger against the wheel; the tail is for");
     sb.AppendLine("that spring and for the release lever.");
