@@ -813,7 +813,18 @@
       log.Add("This is " + (turnsTot * nSeg).ToString("0") + " thread samples. Drop Segments or ThreadLen if it crawls.");
     if (thrL > 1e-9 && thrL < 0.8 * d)
       log.Add("Threaded length is under one diameter - very little engagement.");
-    if (rc2 == 1 && hd == 2) log.Add("A counterbore under a countersunk head will not seat it. Use \"sink\".");
+    string hName = (hd == 0 ? "socket" : hd == 1 ? "button" : hd == 2 ? "countersunk" :
+                    hd == 3 ? "hex" : hd == 4 ? "pan" : "headless");
+    if (rc2 == 1 && hd == 2)
+      log.Add("Recess \"bore\" under a countersunk head: a flat-bottomed pocket cannot seat a " +
+              "cone. Use \"sink\", or \"auto\".");
+    if (rc2 == 2 && hd != 2 && hd != 5)
+      log.Add("Recess \"sink\" under a " + hName + " head: that head bears on a FLAT underside " +
+              "and a cone will not seat it - it will sit on the rim and rock. Use \"bore\" to " +
+              "sink it, \"none\" to leave it proud, or \"auto\" to be picked for. " +
+              "(Left over from a flat-head test?)");
+    if (rc2 == 2 && hd == 5)
+      log.Add("Recess \"sink\" on a headless part does nothing useful - there is no head to seat.");
     if (xt > 0.35 * (clr - d)) log.Add("Tol is large next to the Fit clearance - check the hole is not sloppy.");
 
     System.Text.StringBuilder sb = new System.Text.StringBuilder();
