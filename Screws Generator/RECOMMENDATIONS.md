@@ -6,7 +6,71 @@ filament and your slicer all move the answer.
 
 ---
 
-## 0. What Tol actually is, and how to get your number
+## 1. Which path are you on?
+
+Decide this first, because the two paths want different things and almost every
+mistake comes from following advice meant for the other one.
+
+### A — a real screw, off the shelf
+
+A steel M5 cap screw out of the drawer. **You are not making a thread.** You need
+a hole for it to pass through, and something at the far end for it to bite into.
+
+    ScrewGenerator   Size, Head, Length, Fit, Tol, Recess   ->  use PREP
+                     Threads 0
+    ThreadTap        not in your graph at all
+
+- **`Threads 0`.** `Prep` is built from the clearance table and the head
+  dimensions and never looks at the thread, so you get an identical `Prep` and a
+  far faster regen. `Screw` still draws, as a plain shank, which is all you need
+  to eye up fit and interference.
+- **`Fit` + `Tol`, and do not stack them.** `Fit` is the *joint's* positional
+  allowance; `Tol` is your *printer's* error. `loose` already contains slop, so
+  `loose` plus a big `Tol` pays for it twice. Use `normal` + your measured `Tol`.
+- **Any size works.** An off-the-shelf screw does not care what your printer can
+  resolve. Nothing in the size floor applies to you.
+- **The far end is not this toolkit's job.** A captive hex nut in a printed
+  pocket, or a heat-set insert. Both are a hexagon or a circle extruded in
+  Grasshopper — a script would not earn its place.
+
+### B — a printed thread
+
+Plastic screw into plastic. Both halves come off the machine.
+
+    ScrewGenerator   ->  Screw          the fastener itself
+    ThreadTap        ->  Cutter         subtract for the threaded hole
+
+- **The size floor applies, hard.** See *Tol is absolute, threads are not*. FDM
+  does not do small printed threads, and no amount of care changes that.
+- **`Chamfer 1`.** Not optional on a printed hole.
+
+### C — a real screw into a printed thread
+
+The common hybrid: a steel M4 going into a printed boss. The screw is exact, so
+**the printed hole carries the whole error**.
+
+    ScrewGenerator   ->  Prep     for the part the screw passes THROUGH
+    ThreadTap        ->  Cutter   for the part it threads INTO
+
+Settings as B, and the size floor still applies — it is the printed half that
+decides, not the steel one. Below the floor, switch that end to a heat-set insert
+and you are back on path A.
+
+### Which gets which number
+
+| | `Fit` | `Tol` on Prep | `Tol` on ThreadTap | size floor |
+|---|---|---|---|---|
+| A — real screw, clearance hole | normal | measured | — | none |
+| B — printed thread | — | — | measured | applies |
+| C — hybrid | normal | measured | measured | applies |
+
+The stakes are not symmetric, which is why the advice differs: too much `Tol` on
+a clearance hole gives you slop you will probably never notice. Too much on a
+thread strips it.
+
+---
+
+## 2. What Tol actually is, and how to get your number
 
 **`Tol` is not a design choice. It is a measurement of your machine.**
 
@@ -25,7 +89,7 @@ model to cancel that error out.
 than merely fits.
 
 **Bigger is not safer.** Every bit of `Tol` comes off the flank, and the flank is
-the only thing carrying load (§2b). Too little and it will not assemble; too much
+the only thing carrying load (*Tol is absolute*). Too little and it will not assemble; too much
 and it strips. You want the SMALLEST number that goes together, not the
 comfortable-looking one.
 
@@ -56,7 +120,7 @@ before you have measured — not a substitute for measuring.
 
 ---
 
-## 0b. Do this once, before you trust any of it
+## 3. Do this once, before you trust any of it
 
 Print a **test pair**, not the real part.
 
@@ -73,7 +137,7 @@ most of its flank contact and will strip under load.
 
 ---
 
-## 1. Materials
+## 4. Materials
 
 `Tol` is a **radial** clearance in millimetres, applied to the internal thread,
 so the hole opens by twice this on diameter. It is the same knob in both scripts.
@@ -95,7 +159,7 @@ so the hole opens by twice this on diameter. It is the same knob in both scripts
 
 ---
 
-## 2. How much thread to engage
+## 5. How much thread to engage
 
 Depth of the tapped hole, as a multiple of the screw diameter. This matters far
 more than tightness — a loose thread that is long enough holds; a perfect thread
@@ -116,7 +180,7 @@ load and the rest is along for the ride.
 
 ---
 
-## 2b. The catch nobody tells you: Tol is absolute, threads are not
+## 6. The catch nobody tells you: Tol is absolute, threads are not
 
 A printer's error is a fixed number of millimetres. It does not get smaller when
 the screw does. But the **thread depth** does — it is `0.5413 × pitch`, and the
@@ -186,12 +250,12 @@ Three ways out, in order of how well they work:
 
 ---
 
-## 3. When **not** to print the thread
+## 7. When **not** to print the thread
 
 Printed threads are a real option, and they are also the wrong answer surprisingly often.
 
 **Use a heat-set insert instead when:**
-- the size is **M4 / #8 or smaller** — see §2b, there is not enough flank left once
+- the size is **M4 / #8 or smaller** — see *Tol is absolute*, there is not enough flank left once
   your clearance comes off. This is the common case and people ignore it.
 - the joint will be taken apart more than a handful of times
 - it carries real load in PLA
@@ -209,7 +273,7 @@ Print a hexagonal pocket, drop a steel nut in. Nothing printed will beat it.
 
 ---
 
-## 4. The mouth chamfer — what it is and what to set
+## 8. The mouth chamfer — what it is and what to set
 
 `ThreadTap.Chamfer` is **in pitches, not millimetres**. `1` means one pitch on an
 M3 and one pitch on a 1/2-13 alike, and `ThreadTap` does the multiply itself
@@ -286,14 +350,14 @@ Inch, in inches:
 
 ---
 
-## 5. Printing them well
+## 9. Printing them well
 
 **Orientation is most of it.** A thread whose axis is vertical prints as a stack
 of rings and comes out well. A thread lying on its side is a stack of
 overhanging arcs, and the underside of every turn droops. If you can only print
 it lying down, add 0.05–0.10 to `Tol` and expect to chase it with a tap.
 
-**Chamfer earns its place.** Covered in full in §4 — set it to `1` for anything
+**Chamfer earns its place.** Covered in full under *The mouth chamfer* — set it to `1` for anything
 printed. It costs nothing and it is the difference between a thread that starts
 and one you fight.
 
@@ -310,7 +374,7 @@ it back before you export — the mesh cost is real and you will notice it at
 
 ---
 
-## 6. Where each clearance actually goes
+## 10. Where each clearance actually goes
 
 Worth being clear, because two different `Tol`s do two different jobs:
 
@@ -327,22 +391,22 @@ none of the clearance lives on it.
 
 ---
 
-## 7. When it does not fit
+## 11. When it does not fit
 
 | symptom | what it is | fix |
 |---|---|---|
-| screw will not start | first thread curled, or elephant's foot | `Chamfer` to `1` on `ThreadTap` (§4) |
+| screw will not start | first thread curled, or elephant's foot | `Chamfer` to `1` on `ThreadTap` |
 | starts then binds | `Tol` too small | +0.05 and print the test pair again |
 | goes in but rocks | `Tol` too large | −0.05. Check you are not also on `loose` `Fit` |
-| strips on first use | check `flank left` in `Info` — under 50 %? | bigger screw, or an insert. Length will not save it (§2b) |
+| strips on first use | check `flank left` in `Info` — under 50 %? | bigger screw, or an insert. Length will not save it |
 | fits in PLA, not in PETG | it is the material, not the model | use the preset for what you are actually printing |
-| fine on one printer, tight on another | it always is | `Tol` is per-machine, re-run §0 |
+| fine on one printer, tight on another | it always is | `Tol` is per-machine, measure it again |
 | head does not sit flush | `Recess`, not `Length` | `sink` for flat heads, `bore` for the rest |
 | head sits too deep | `sink=` in `Opts` is doing it | set `sink=0` or drop it from `Opts` |
 
 ---
 
-## 8. Machining, for completeness
+## 12. Machining, for completeness
 
 Set `Tol` to 0 and `Fit` to `close` or `normal`. The geometry is the basic ISO
 profile and a real tap already carries its allowance — adding your own on top

@@ -24,7 +24,8 @@
 //     MinSize   string  "M6 / 1/4-20" - the smallest metric and inch size this
 //                       preset's Tol still leaves a workable thread on (50% of
 //                       the flank).  Below it, use a heat-set insert or cut a
-//                       real thread.  See RECOMMENDATIONS.md 2b.  READ THIS ONE.
+//                       real thread - or switch to a real screw and use Prep instead.
+//                       RECOMMENDATIONS.md, "Which path are you on".  READ THIS ONE.
 //     Info      string  cheat sheet + what the chosen preset means and why
 // ===========================================================================
 

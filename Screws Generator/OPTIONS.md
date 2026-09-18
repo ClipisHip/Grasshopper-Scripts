@@ -200,7 +200,7 @@ widely. `Info` says so when you land on one.
 ## Presets — `ScrewOptions.Preset`
 
 `Chamfer` is in **pitches**, so the one number suits every size — `ThreadTap`
-multiplies by its own pitch. See RECOMMENDATIONS.md §4.
+multiplies by its own pitch. See RECOMMENDATIONS.md, *The mouth chamfer*.
 
 | preset | Tol (radial mm) | Fit | Chamfer (pitches) | Segments |
 |---|---|---|---|---|
