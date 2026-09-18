@@ -66,12 +66,57 @@ load and the rest is along for the ride.
 
 ---
 
+## 2b. The catch nobody tells you: Tol is absolute, threads are not
+
+A printer's error is a fixed number of millimetres. It does not get smaller when
+the screw does. But the **thread depth** does — it is `0.5413 × pitch`, and the
+pitch shrinks with the screw. So the same `Tol` that is comfortable on an M8
+removes most of the thread on an M3.
+
+What is left of the flank after clearance, at the PLA preset of 0.20:
+
+| size | thread depth | flank left at Tol 0.20 | verdict |
+|---|---|---|---|
+| M3 | 0.271 | **26 %** | will strip |
+| M4 | 0.379 | **47 %** | will strip |
+| M5 | 0.433 | 54 % | workable |
+| M6 | 0.541 | 63 % | workable |
+| M8 | 0.677 | 70 % | fine |
+| M10 | 0.812 | 75 % | fine |
+
+Inch, at 0.22:
+
+| size | thread depth | flank left | verdict |
+|---|---|---|---|
+| #4-48 | 0.286 | **23 %** | will strip |
+| #8-32 | 0.430 | **49 %** | will strip |
+| 1/4-20 | 0.687 | 68 % | workable |
+| 3/8-16 | 0.859 | 74 % | fine |
+
+**This is the real reason small printed threads fail**, and it is not a fault in
+the model — it is arithmetic. Your printer cannot hold 0.05 mm, and 0.05 mm is
+what an M3 thread needs to keep its flanks.
+
+`ThreadTap` now prints `flank left` in `Info` every run and warns below 70 %.
+Read that line before you print anything. Under 50 % it will strip, and no
+amount of thread length rescues it.
+
+Three ways out, in order of how well they work:
+
+1. **Use a bigger screw.** M5 is the smallest that prints honestly in FDM.
+2. **Use a heat-set insert** and a plain bore. Below M4, this is the answer.
+3. **Print the `Drill` hole and cut a real thread** with a tap. Works down to
+   M3 because the tap does not care about your printer's tolerance.
+
+---
+
 ## 3. When **not** to print the thread
 
 Printed threads are a real option, and they are also the wrong answer surprisingly often.
 
 **Use a heat-set insert instead when:**
-- the size is M3 or smaller — the thread form is finer than a 0.4 mm nozzle can resolve honestly
+- the size is **M4 / #8 or smaller** — see §2b, there is not enough flank left once
+  your clearance comes off. This is the common case and people ignore it.
 - the joint will be taken apart more than a handful of times
 - it carries real load in PLA
 
@@ -213,7 +258,7 @@ none of the clearance lives on it.
 | screw will not start | first thread curled, or elephant's foot | `Chamfer` to `1` on `ThreadTap` (§4) |
 | starts then binds | `Tol` too small | +0.05 and print the test pair again |
 | goes in but rocks | `Tol` too large | −0.05. Check you are not also on `loose` `Fit` |
-| strips on first use | not enough engagement | `Length` to 2 d, or use an insert |
+| strips on first use | check `flank left` in `Info` — under 50 %? | bigger screw, or an insert. Length will not save it (§2b) |
 | fits in PLA, not in PETG | it is the material, not the model | use the preset for what you are actually printing |
 | fine on one printer, tight on another | it always is | `Tol` is per-machine, re-run §0 |
 | head does not sit flush | `Recess`, not `Length` | `sink` for flat heads, `bore` for the rest |
@@ -229,6 +274,9 @@ gives you a sloppy thread for no reason.
 
 `Drill` on `ThreadTap` is the tap-drill hole at `d − P`, which is the
 ~77 % engagement rule and lands on the standard drill for every size in the
-table. `Info` prints the engagement it leaves. Below 100 % is not a compromise:
+table. `Tol` is deliberately **not** added to it: this is the hole a real tap
+goes into, and a tap cuts the basic form and carries its own allowance. Opening
+the drill by a print clearance on top would put it wider than the thread crests
+and leave nothing to cut. `Info` prints the engagement it leaves. Below 100 % is not a compromise:
 75–80 % is the usual target, because the last 20 % of thread depth buys about
 5 % more strength and roughly doubles the torque needed to cut it.

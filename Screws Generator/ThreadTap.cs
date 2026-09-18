@@ -419,7 +419,12 @@
     // ---- DRILL : the hole you make BEFORE tapping, point and all ------------
     //  d - P is the 75%-engagement rule and it lands on the standard tap drill
     //  for every size in the table.  118 deg is the everyday twist-drill point.
-    double dDrill = d - P + 2.0 * c;
+    //
+    //  NOTE Tol is deliberately NOT added here.  This is the hole a REAL TAP
+    //  goes into, and a real tap cuts the basic form and carries its own
+    //  allowance.  Opening the drill by a print clearance on top would put it
+    //  wider than the thread crests and there would be no thread left to cut.
+    double dDrill = d - P;
     double pt118  = 0.5 * dDrill / Math.Tan(RhinoMath.ToRadians(59.0));
     List<Point3d> dp = new List<Point3d>();
     dp.Add(new Point3d(0.5 * dDrill, 0, -0.5 * mm));
@@ -463,8 +468,10 @@
     // =======================================================================
     //  REPORT
     // =======================================================================
-    double d2p   = d - 0.6495 * P;
+    double d2p    = d - 0.6495 * P;
     double engage = 76.98 * (d - dDrill) / P;       // % of full thread the drill leaves
+    double depth  = 0.5 * (d - D1);                 // thread depth per flank
+    double flank  = (depth > 1e-12) ? (depth - c) / depth : 0.0;   // left after clearance
     double turns2 = L / P;
     string unitTxt = "";
     if (Rhino.RhinoDoc.ActiveDoc != null)
@@ -474,8 +481,18 @@
       log.Add("This is " + (turns2 * nSeg).ToString("0") + " thread samples. Drop Segments or Length if it crawls.");
     if (xt <= 0.0 && EI <= 0.0)
       log.Add("Tol 0 and class H is the BASIC profile - a nominal screw is a zero-clearance fit. Fine for a boolean, will not print.");
-    if (xt > 0.35 * (0.5 * (d - D1)))
-      log.Add("Tol is over a third of the thread depth - the flanks are barely engaging.");
+    if (flank <= 0.0)
+      log.Add("CLEARANCE EXCEEDS THE WHOLE THREAD DEPTH (" + depth.ToString("0.###") +
+              "). There is no thread here at all - a plain bore would do the same job. " +
+              "Drop Tol, or step up a size.");
+    else if (flank < 0.5)
+      log.Add("Only " + (100.0 * flank).ToString("0") + "% of the flank is left after clearance" +
+              " - the thread depth is " + depth.ToString("0.###") + " and you have taken " +
+              c.ToString("0.###") + " off it. It will strip. Drop Tol, or use a bigger screw, " +
+              "or a heat-set insert.");
+    else if (flank < 0.7)
+      log.Add((100.0 * flank).ToString("0") + "% of the flank is left after clearance. " +
+              "Workable, but give it extra Length.");
 
     System.Text.StringBuilder sb = new System.Text.StringBuilder();
     sb.AppendLine(canon + "   internal / nut thread   " + (metric ? "ISO metric" : "Unified inch") +
@@ -504,8 +521,11 @@
     sb.AppendLine("nut boss            " + (2.0 * Ro).ToString("0.###") + " outside,  wall " +
                   (Ro - Rmaj).ToString("0.###"));
     sb.AppendLine("--");
+    sb.AppendLine("flank left          " + (100.0 * flank).ToString("0") + "%   of the " +
+                  depth.ToString("0.###") + " thread depth, after " + c.ToString("0.###") + " clearance");
     sb.AppendLine("tap drill           " + dDrill.ToString("0.###") + "   -> " +
-                  engage.ToString("0") + "% thread engagement");
+                  engage.ToString("0") + "% engagement.  For a REAL TAP - no Tol added, " +
+                  "a tap carries its own");
     sb.AppendLine("Drill output        that cylinder plus a 118 deg point, " + pt118.ToString("0.##") + " past the depth");
     if (log.Count > 0) { sb.AppendLine("--"); foreach (string s2 in log) sb.AppendLine("! " + s2); }
 
