@@ -29,22 +29,31 @@ Right-click the list outputs on ScrewOptions and set them to List access.
 --------------------------------------------------------------------------------
 ## 0. THE FRAME, BECAUSE EVERYTHING ELSE DEPENDS ON IT
 
-    Pln.Origin is the SEATING FACE — the underside of the head, and the mouth of
-    the tapped hole. Both scripts drive along -Pln.ZAxis.
+    Pln.Origin is the PART FACE, and the mouth of the tapped hole. Both scripts
+    drive along -Pln.ZAxis.
 
-              +Z   [][]  head                 <- k tall, ABOVE the plane
-          ----------------------  Pln         <- z = 0
-              -Z   |WWW|  shank               <- Length, BELOW the plane
-                   |WWW|
-                    \ /   45 deg point
+       socket · button · hex · pan            flat (countersunk)
+
+         +Z   [][]  head                       ____       ____
+     ----------------------  Pln          ----\    /----------  Pln
+         -Z   |WWW|  shank                     \__/   head sunk flush
+              |WWW|                            |WWW|
+               \ /  45 deg point                \ /
+
+              the head bears its              the head sits IN the face,
+              underside on the face           so Pln is the head TOP
+
+    LENGTH FOLLOWS THE SAME SPLIT, and it is the trade convention, not a choice:
+    under the head for everything except `flat`, where it is the TOTAL length
+    with the head included. Which means two flat heads of the same Length line
+    up at the top and reach the same depth, however much their head heights
+    differ — and M6 and 1/4-20 differ by more than a millimetre, because 82 deg
+    is shallower than 90 and the inch head is wider.
 
     Prep is built in the same frame. The clearance bore runs DOWN from the plane.
     A counterbore or countersink runs UP from it — that is the material you take
     off to seat the head, so for those two settings part of Prep pokes above the
     plane. That is correct, not a bug.
-
-    Countersunk screws follow the trade convention: `Length` is the TOTAL length,
-    head included. Every other head measures under the head.
 
 --------------------------------------------------------------------------------
 ## 1. SCREW GENERATOR                                      (ScrewGenerator.cs)

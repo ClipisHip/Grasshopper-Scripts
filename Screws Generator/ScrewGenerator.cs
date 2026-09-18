@@ -48,8 +48,13 @@
 // ===========================================================================
 //  HOW IT IS PLACED
 //
-//     Pln.Origin sits on the SEATING FACE - the underside of the head.
-//     The screw drives along -Pln.ZAxis.  The head is on the +Z side.
+//     Pln.Origin sits on the PART FACE, and the screw drives along -Pln.ZAxis.
+//       - socket, button, hex, pan:  the head bears its underside on that face
+//         and stands proud, on the +Z side.
+//       - flat (countersunk):  the head sits IN the face, flush, so Pln is the
+//         head TOP.  Length is the TOTAL length for these, head included, which
+//         means two flat heads of the same Length line up at the top and reach
+//         the same depth no matter how their head heights differ.
 //
 //              +Z   [][]  head              <- k tall, above the plane
 //          ----------------------  Pln      <- z = 0, seating face
@@ -763,6 +768,20 @@
     //  PLACE.  Local +Z runs into the part, so the target frame is Pln spun
     //  180 deg about its own X - a proper rotation, the thread keeps its hand.
     // =======================================================================
+    // A COUNTERSUNK HEAD SITS FLUSH, so its datum is the head TOP - that IS the
+    // part face.  Every other head bears its underside on the face.  Built with
+    // the cone/shank junction at zero, so shift the whole thing down by k and
+    // the rule becomes the same one for all of them: Pln is the part's face.
+    // Without this, two sizes with different head heights line up on a junction
+    // that sits a different depth below the face in each, so their tops AND
+    // their tips disagree even though both are the same total length.
+    if (hd == 2)
+    {
+      Transform dn = Transform.Translation(0.0, 0.0, k);
+      screw.Transform(dn);
+      if (prep != null) prep.Transform(dn);
+    }
+
     Plane bp = Pln.IsValid ? Pln : Plane.WorldXY;
     Plane tp = new Plane(bp.Origin, bp.XAxis, -bp.YAxis);
     Transform xf = Transform.PlaneToPlane(Plane.WorldXY, tp);
@@ -809,12 +828,10 @@
       sb.AppendLine("   k a little larger - that extra is the blend at the bottom of the cone,");
       sb.AppendLine("   which a cone cannot have. Diameter and angle are exact, so a real screw");
       sb.AppendLine("   still seats flush in the countersink. SPEC.md section 4.");
-      sb.AppendLine("   Pln sits where the cone meets the shank, " + k.ToString("0.###") +
-                    " BELOW the part face.");
-      sb.AppendLine("   Length " + L.ToString("0.###") + " is TOTAL, so the tip is " +
-                    L.ToString("0.###") + " below the face and " + shankLen.ToString("0.###") +
-                    " below Pln. Two sizes with different head heights will");
-      sb.AppendLine("   therefore reach the same depth below the FACE and different depths below Pln.");
+      sb.AppendLine("   Pln is the head TOP, which is the part face - a flat head sits flush.");
+      sb.AppendLine("   Length " + L.ToString("0.###") + " is TOTAL, head included, so the tip is " +
+                    L.ToString("0.###") + " below Pln. Two sizes of the same");
+      sb.AppendLine("   Length line up at the top and reach the same depth, whatever their heads do.");
     }
     sb.AppendLine("--");
     sb.AppendLine("length              " + L.ToString("0.###") +
