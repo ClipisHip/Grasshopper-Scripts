@@ -6,7 +6,57 @@ filament and your slicer all move the answer.
 
 ---
 
-## 0. Do this once, before you trust any of it
+## 0. What Tol actually is, and how to get your number
+
+**`Tol` is not a design choice. It is a measurement of your machine.**
+
+Model a 5.00 mm hole, print it, measure it: it comes out around 4.80. The plastic
+squashes inward, the layers bulge into the bore, the part shrinks as it cools.
+Your machine made the hole 0.10 mm smaller **on the radius** than you asked for.
+
+So a thread modelled at nominal physically cannot accept its screw — there is
+less space in there than the screw occupies. `Tol` is how much you enlarge the
+model to cancel that error out.
+
+    what you model   ->   what the machine makes   ->   what fits
+    nominal + Tol         nominal + Tol - error         nominal
+
+`Tol` = your process's hole shrinkage, plus a little so the thread *turns* rather
+than merely fits.
+
+**Bigger is not safer.** Every bit of `Tol` comes off the flank, and the flank is
+the only thing carrying load (§2b). Too little and it will not assemble; too much
+and it strips. You want the SMALLEST number that goes together, not the
+comfortable-looking one.
+
+### Getting your number
+
+1. **Measure directly — one print.** A block with a plain hole modelled at
+   10.00 mm. Caliper it. Reads 9.78? Radial error 0.11. Start at 0.15: the error
+   plus a running fit.
+2. **Bracket it — authoritative.** The test pair below. Better than (1), because
+   thread flanks do not shrink quite like a plain bore does.
+
+Use (1) to get close and (2) to confirm.
+
+**Then you are done, permanently.** The error is absolute — your printer is off
+by the same 0.1 mm whether it is making an M3 or an M20 — so **one number covers
+every size you will ever print on that machine in that material.** Measure it
+once, write it on the wall, stop thinking about it.
+
+That same fact is why small threads fail. An absolute 0.1 mm is nothing against
+an M10's 0.8 mm thread depth and most of an M3's 0.27.
+
+**Machining is the easy case: `Tol = 0`.** A mill or a tap makes the hole the
+size you asked for, and a tap carries its own allowance. Adding your own on top
+just gives you a loose thread.
+
+The presets are estimates of a typical machine's error per material. They are for
+before you have measured — not a substitute for measuring.
+
+---
+
+## 0b. Do this once, before you trust any of it
 
 Print a **test pair**, not the real part.
 
