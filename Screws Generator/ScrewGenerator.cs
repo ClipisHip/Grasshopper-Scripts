@@ -350,7 +350,12 @@
     // =======================================================================
     double dk = capDk, k = capK, sock = capS;
     double tanH = metric ? 1.0 : Math.Tan(RhinoMath.ToRadians(41.0));   // 90 vs 82 deg included
-    double eps  = 0.04 * d;                       // land under a countersunk head
+    // The land under a countersunk head.  It exists ONLY to keep the annular
+    // face between the cone's bottom edge and the shank from being zero-width,
+    // so it wants to be as small as the model tolerance allows - every bit of
+    // it comes straight off the modelled head height.  It was 0.04 d, which
+    // cost an M6 head 0.24 of its 3.3 mm.
+    double eps  = Math.Max(4.0 * tol, 0.01 * d);
     double Rc   = 0.5 * d;                        // crest radius
     double H    = 0.8660254037844386 * P;         // fundamental triangle
     double Rr   = Rc - 0.625 * H;                 // root radius, = 0.5*(d - 1.0825P)
@@ -796,7 +801,21 @@
     sb.AppendLine("thread depth        " + (Rc - Rr).ToString("0.####") + " per flank");
     if (k > 1e-9)
       sb.AppendLine("head                dia " + dk.ToString("0.###") + ", " + k.ToString("0.###") + " tall" +
+                    (hd == 2 ? " at " + (metric ? "90" : "82") + " deg included" : "") +
                     (sock > 1e-9 ? ", hex socket " + sock.ToString("0.##") : ""));
+    if (hd == 2)
+    {
+      sb.AppendLine("   head height is the CONE height worked out from dk. The standard lists");
+      sb.AppendLine("   k a little larger - that extra is the blend at the bottom of the cone,");
+      sb.AppendLine("   which a cone cannot have. Diameter and angle are exact, so a real screw");
+      sb.AppendLine("   still seats flush in the countersink. SPEC.md section 4.");
+      sb.AppendLine("   Pln sits where the cone meets the shank, " + k.ToString("0.###") +
+                    " BELOW the part face.");
+      sb.AppendLine("   Length " + L.ToString("0.###") + " is TOTAL, so the tip is " +
+                    L.ToString("0.###") + " below the face and " + shankLen.ToString("0.###") +
+                    " below Pln. Two sizes with different head heights will");
+      sb.AppendLine("   therefore reach the same depth below the FACE and different depths below Pln.");
+    }
     sb.AppendLine("--");
     sb.AppendLine("length              " + L.ToString("0.###") +
                   (hd == 2 ? "  total, head included" : "  under the head"));
