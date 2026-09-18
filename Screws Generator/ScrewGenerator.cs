@@ -24,8 +24,10 @@
 //                       Leave it EMPTY for the defaults.  All optional:
 //                         sink=<n>  extra recess depth below the part face
 //                                   (0, the default, finishes the head flush)
-//                         prep=<n>  how far Prep reaches past the seating face
-//                                   (default: shank + 2 mm)
+//                         prep=<n>  how far Prep reaches BELOW Pln, measured the
+//                                   same way for every head (default: 2 mm past
+//                                   the tip).  Set it to your plate thickness
+//                                   for a clean through hole.
 //                         seg=<n>   thread samples per turn, snapped to a
 //                                   multiple of 16 (default 96; 32 draft, 192 show)
 //                       e.g.   sink=2 seg=192
@@ -705,7 +707,17 @@
     //  the head; everything below is the through hole.
     // =======================================================================
     double rBore = 0.5 * clr + xt;
-    double pLen  = (optPrep > 1e-9) ? optPrep : shankLen + 2.0 * mm;
+    // prep= is measured BELOW PLN, the same as everything else you can see, so
+    // on a countersunk head - where the build frame starts k above Pln and the
+    // whole thing is shifted down at the end - it has to lose that k here.
+    double zShift = (hd == 2) ? k : 0.0;
+    double pLen   = (optPrep > 1e-9) ? optPrep - zShift : shankLen + 2.0 * mm;
+    if (pLen <= 0.5 * d)
+    {
+      pLen = shankLen + 2.0 * mm;
+      log.Add("Opts prep=" + optPrep.ToString("0.###") + " does not even clear the head - " +
+              "ignored, using " + (pLen + zShift).ToString("0.###") + " below the face.");
+    }
     double snk   = (optSink > 0.0) ? optSink : 0.0;
     double over  = 0.5 * mm;                         // break-out past the part face
 
@@ -846,7 +858,8 @@
                   "   = " + clr.ToString("0.###") + " " + fitName +
                   (xt > 0.0 ? " + 2 x " + xt.ToString("0.###") + " Tol" : ""));
     sb.AppendLine("prep recess         " + prepTxt);
-    sb.AppendLine("prep reach          " + pLen.ToString("0.###") + " below the seating face");
+    sb.AppendLine("prep reach          " + (pLen + zShift).ToString("0.###") + " below Pln" +
+                  "   (tip is at " + (shankLen + zShift).ToString("0.###") + ")");
     sb.AppendLine("--");
     sb.AppendLine("nut side            wire Spec into ThreadTap - it inherits size, hand, tol and seg");
     if (log.Count > 0) { sb.AppendLine("--"); foreach (string s2 in log) sb.AppendLine("! " + s2); }
