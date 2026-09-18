@@ -21,6 +21,10 @@
 //     Chamfer   double  the preset's mouth chamfer IN PITCHES, for ThreadTap.
 //                       No size needed - ThreadTap does the multiply itself.
 //     Opts      string  the preset's Opts string, for ScrewGenerator
+//     MinSize   string  "M6 / 1/4-20" - the smallest metric and inch size this
+//                       preset's Tol still leaves a workable thread on (50% of
+//                       the flank).  Below it, use a heat-set insert or cut a
+//                       real thread.  See RECOMMENDATIONS.md 2b.  READ THIS ONE.
 //     Info      string  cheat sheet + what the chosen preset means and why
 // ===========================================================================
 
@@ -51,7 +55,7 @@
 //                           ref object Sizes, ref object Heads, ref object Fits,
 //                           ref object Recesses, ref object Presets,
 //                           ref object Tol, ref object Fit, ref object Chamfer,
-//                           ref object Opts, ref object Info)
+//                           ref object Opts, ref object MinSize, ref object Info)
 // ---------------------------------------------------------------------------
 
     System.Globalization.CultureInfo IC = System.Globalization.CultureInfo.InvariantCulture;
@@ -236,6 +240,37 @@
 
 
     // =======================================================================
+    //  HOW SMALL CAN THIS PRESET ACTUALLY GO?
+    //  Tol is an absolute clearance - your printer's error does not shrink when
+    //  the screw does - but thread depth is 0.5413 x pitch, which does.  So a
+    //  number that is comfortable on an M8 takes most of the flank off an M3.
+    //  Find the smallest size in the table that still keeps 70% of its flank,
+    //  and say so, because the preset alone cannot know what size you picked.
+    // =======================================================================
+    //  Two bars, because one would be misleading.  50% of the flank left is
+    //  workable if you give it length; 70% is comfortable.  Below 50% it strips
+    //  and no amount of thread length rescues it.
+    string okM = "", okI = "", goodM = "", goodI = "", minSize = "any size";
+    if (oTol > 0.0)
+    {
+      for (int i = 0; i < SZ.Length; i++)
+      {
+        string[] f = SZ[i].Split(new char[]{' ', '\t'}, StringSplitOptions.RemoveEmptyEntries);
+        if (f[4] != "c") continue;                   // coarse only: the deepest thread on that diameter
+        double dep = 0.5413 * double.Parse(f[1], IC) * (f[2] == "m" ? mm : 25.4 * mm);
+        if (dep <= 0.0) continue;
+        double fl = (dep - oTol) / dep;
+        bool met = (f[2] == "m");
+        if (fl >= 0.50) { if (met && okM.Length   == 0) okM   = f[0]; if (!met && okI.Length   == 0) okI   = f[0]; }
+        if (fl >= 0.70) { if (met && goodM.Length == 0) goodM = f[0]; if (!met && goodI.Length == 0) goodI = f[0]; }
+      }
+      minSize = (okM.Length > 0 ? okM : "none") + " / " + (okI.Length > 0 ? okI : "none");
+      if (okM.Length == 0 && okI.Length == 0)
+        log.Add("Tol " + oTol.ToString("0.###") + " is over half the thread depth on EVERY size " +
+                "in the table. Nothing here will hold. Use inserts, or cut real threads.");
+    }
+
+    // =======================================================================
     //  CHEAT SHEET
     // =======================================================================
     System.Text.StringBuilder sb = new System.Text.StringBuilder();
@@ -285,6 +320,21 @@
       sb.AppendLine("   " + pNote);
       if (oTol <= 0.0)
         sb.AppendLine("   Zero clearance. Right for cutting metal, WILL NOT assemble if printed.");
+      else
+      {
+        sb.AppendLine();
+        sb.AppendLine("   SIZE FLOOR for Tol " + oTol.ToString("0.###") + "        metric      inch");
+        sb.AppendLine("      workable, 50% flank       " + (okM.Length   > 0 ? okM   : "none").PadRight(11) +
+                                                           (okI.Length   > 0 ? okI   : "none"));
+        sb.AppendLine("      comfortable, 70% flank    " + (goodM.Length > 0 ? goodM : "none").PadRight(11) +
+                                                           (goodI.Length > 0 ? goodI : "none"));
+        sb.AppendLine("   Tol is absolute but thread depth is 0.5413 x pitch, so this same");
+        sb.AppendLine("   " + oTol.ToString("0.###") + " takes a far bigger bite out of a small thread. Under the");
+        sb.AppendLine("   workable row it strips, and thread LENGTH will not rescue it - use a");
+        sb.AppendLine("   heat-set insert, or print the Drill hole and cut a real thread.");
+        sb.AppendLine("   Fine pitches are shallower than coarse, so they need a size more still.");
+        sb.AppendLine("   ThreadTap prints the exact flank left for the size you actually use.");
+      }
     }
     else
     {
@@ -302,4 +352,5 @@
     Fit      = oFit;
     Chamfer  = chamP;
     Opts     = oOpts;
+    MinSize  = minSize;
     Info     = sb.ToString();

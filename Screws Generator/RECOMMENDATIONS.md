@@ -101,6 +101,32 @@ what an M3 thread needs to keep its flanks.
 Read that line before you print anything. Under 50 % it will strip, and no
 amount of thread length rescues it.
 
+### The size floor for every preset
+
+`ScrewOptions` now computes this and puts it on a `MinSize` output, so you get it
+at the moment you pick the preset rather than after the part fails. *Workable*
+means 50 % of the flank survives — it holds if you give it length. *Comfortable*
+is 70 %.
+
+| preset | Tol | workable from | comfortable from |
+|---|---|---|---|
+| `resin` | 0.08 | M1.6 / #1-64 | M3 / #3-48 |
+| `resin-tough` | 0.12 | M2.5 / #2-56 | M5 / #6-32 |
+| `pla` | 0.20 | M5 / #6-32 | M8 / 1/4-20 |
+| `abs` `asa` `pc` | 0.22 | M6 / #10-24 | M10 / 5/16-18 |
+| `petg` `sls-mjf` | 0.25 | M6 / #10-24 | M12 / 3/8-16 |
+| `nylon` | 0.30 | M8 / 1/4-20 | M14 / 1/2-13 |
+| `first-try` | 0.35 | M10 / 5/16-18 | M20 / 5/8-11 |
+| `machined` `tap-it` | 0 | any | any |
+
+Read that table once and it reframes the whole business: **FDM does not do small
+printed threads.** Not because the geometry is wrong, but because 0.2 mm of
+printer error is most of an M3's thread. This is also why `resin` reaches so much
+further down — 0.08 mm of clearance leaves an M3 with 70 % of its flank.
+
+Fine pitches are shallower than coarse at the same diameter, so they need one
+size more again.
+
 Three ways out, in order of how well they work:
 
 1. **Use a bigger screw.** M5 is the smallest that prints honestly in FDM.
