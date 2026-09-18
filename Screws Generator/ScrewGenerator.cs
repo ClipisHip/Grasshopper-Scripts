@@ -625,6 +625,13 @@
     }
     if (!screw.IsSolid) log.Add("Screw is not watertight - raise Segments or loosen the model tolerance.");
 
+    // ORIENTATION FIRST, BEFORE ANY BOOLEAN.  A difference against an
+    // inward-oriented solid does not subtract - it operates on the complement,
+    // and the drive recess comes out as a lump ON the head instead of a pocket
+    // IN it.  JoinBreps picks its own orientation and which way it lands
+    // depends on the face set, so a countersunk head can differ from a cap.
+    if (screw.SolidOrientation == BrepSolidOrientation.Inward) screw.Flip();
+
     // ---- drive recess -------------------------------------------------------
     if (sock > 1e-9 && hd != 5 && k > 1e-9)
     {
@@ -641,12 +648,18 @@
       Extrusion ex = Extrusion.Create(new Polyline(hx).ToPolylineCurve(), tdep + ov, true);
       if (ex != null)
       {
+        double vWas = screw.IsSolid ? screw.GetVolume() : 0.0;
         Brep[] df = Brep.CreateBooleanDifference(screw, ex.ToBrep(), tol);
         if (df != null && df.Length > 0)
         {
           Brep best = df[0]; double bv = -1.0;
           foreach (Brep b in df) { double v = b.GetBoundingBox(true).Volume; if (v > bv) { bv = v; best = b; } }
-          screw = best;
+          double vNow = best.IsSolid ? best.GetVolume() : 0.0;
+          // a difference that did not shrink the solid went the wrong way round
+          if (vWas > 0.0 && vNow > 0.0 && vNow >= vWas)
+            log.Add("The hex socket Boolean added material instead of removing it - " +
+                    "head left solid. Please report this with the Size and Head you used.");
+          else screw = best;
         }
         else log.Add("Hex socket Boolean failed - head left solid.");
       }
@@ -658,17 +671,21 @@
       Interval iy = new Interval(-0.5 * sw, 0.5 * sw);
       Interval iz = new Interval(-k - ov, -k + sd);
       Brep slot = Brep.CreateFromBox(new Box(Plane.WorldXY, ix, iy, iz));
+      double vWas = screw.IsSolid ? screw.GetVolume() : 0.0;
       Brep[] df = Brep.CreateBooleanDifference(screw, slot, tol);
       if (df != null && df.Length > 0)
       {
         Brep best = df[0]; double bv = -1.0;
         foreach (Brep b in df) { double v = b.GetBoundingBox(true).Volume; if (v > bv) { bv = v; best = b; } }
-        screw = best;
+        double vNow = best.IsSolid ? best.GetVolume() : 0.0;
+        if (vWas > 0.0 && vNow > 0.0 && vNow >= vWas)
+          log.Add("The slot Boolean added material instead of removing it - head left solid.");
+        else screw = best;
       }
       else log.Add("Slot Boolean failed - head left solid.");
     }
 
-    if (mirror) screw.Transform(Transform.Mirror(Plane.WorldZX));
+    if (mirror) screw.Transform(Transform.Mirror(Plane.WorldZX));   // a mirror flips it again
     if (screw.SolidOrientation == BrepSolidOrientation.Inward) screw.Flip();
 
     // =======================================================================
