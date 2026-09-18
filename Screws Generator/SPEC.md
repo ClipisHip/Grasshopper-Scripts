@@ -211,14 +211,16 @@ Right-click the list outputs on ScrewOptions and set them to List access.
     inch        thread          ASME B1.1 UNC / UNF
                 clearance       standard close / free / loose drill chart
                 socket cap      ASME B18.3 (1960 series)
+                button          ASME B18.3 button head socket cap screw
                 countersunk     ASME B18.3, 82 deg included
                 hex             ASME B18.2.1 above 1/4, hex machine screw below
+                pan             ANSI/ASME B18.6.3 machine screw (stops at 3/4)
 
     EXTRAPOLATED, and the script says so in Info when you land on one:
-        button head above M16, and every inch button
-        pan head above M10, and every inch pan
-    There is no button or pan standard with the reach of the metric tables, so
-    those rows carry the same ratios as the sizes that ARE tabulated. Everything
+        metric button head above M16
+        metric pan head above M10
+        the 1" inch pan row, since B18.6.3 stops at 3/4
+    Those rows carry the same ratios as the sizes that ARE tabulated. Everything
     else is off a published table.
 
     THE COUNTERSUNK HEAD IS MODELLED SHALLOWER THAN THE STANDARD, on purpose.

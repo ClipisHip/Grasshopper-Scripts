@@ -192,8 +192,9 @@ Write them with the tpi — `1/4-20`, `#8-32`, `1/2-20`. Without a tpi you get U
 | `3/4` | 1.125 × 0.75 | 0.625 | 1.312 × 0.397 | 1.438 | 1.125 × 0.469 | 1.48 × 0.42 |
 | `1` | 1.5 × 1 | 0.75 | 1.75 × 0.53 | 1.938 | 1.5 × 0.641 | 1.97 × 0.56 |
 
-Button and pan rows are scaled from the metric ratios — no inch standard covers them as
-widely. `Info` says so when you land on one.
+Button rows are ASME B18.3 button head socket cap screws; pan rows are ANSI/ASME
+B18.6.3 pan head machine screws. B18.6.3 stops at 3/4, so the 1" pan row is the only
+extrapolated entry in the inch table and `Info` says so when you land on it.
 
 ---
 
