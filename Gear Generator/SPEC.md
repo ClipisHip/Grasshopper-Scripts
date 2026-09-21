@@ -549,8 +549,9 @@ every other component. Everything then lands coaxial and correctly stacked.
                 webW          7        <- was 5; see the load path
                 relW/relIn    8 / 5
                 relZlo/Zhi    31 / 39
-                ancX0/ancY0   19.101 / 1.498   <- spring rib face, fallback
-                ancX1/ancY1   19.103 / 4.498      when SpringAnchor is unwired
+                ancX0/ancY0   18.177 / 2.668   <- spring rib face, fallback
+                ancX1/ancY1   16.911 / 5.388      when SpringAnchor is unwired,
+                                                  for TangAngle 145
                 ancDepth      15       <- run out this far, then the outer
                                           shell clips it
                 zOff          0
@@ -599,9 +600,10 @@ every other component. Everything then lands coaxial and correctly stacked.
     INPUTS      WireDia       0.7
                 CoilOD        6.2
                 Coils         3        <- WHOLE turns; TangAngle adds the rest
-                TangAngle     190      <- AS FITTED, anticlockwise from tang A
-                                          to tang B seen from above.
-                                          180 = straight opposite = whole turns
+                TangAngle     145      <- the V the tangs open AS FITTED, seen
+                                          from above - a catalogue leg angle.
+                                          180 = straight opposite; over 180
+                                          the tangs cross over one another
                 TangA         9        <- to the pawl peg
                 TangB         6        <- to the housing rib
                 BasePlane     <- rack GearPlane
@@ -616,21 +618,24 @@ every other component. Everything then lands coaxial and correctly stacked.
                 pawlLift      10       <- the pawl's full lift
                 armRch        7.55     <- pivot to the wedge contact
                 ribS1/ribLen  1.5 / 3  <- the stretch of tang B the rib takes
+                boreWaist/Len 26.8 / 50.8   <- the housing bore, for the
+                                               tang-against-wall check
                 hand          +1       <- the anchors are solved for +1
 
-    ORDER       0.7 music wire, OD 6.2, ID 4.8, 2.931 body turns free,
-                tangential tangs 9 and 6,
-                FREE tang angle 155 deg (anticlockwise from A to B)
+    ORDER       0.7 music wire, OD 6.2, ID 4.8, 3 body turns,
+                tangential tangs, FREE ANGLE 180 deg - a STOCK torsion spring.
+                Trim the tangs to 9 and 6.
 
     RESULT      tang A leaves the coil at -10.04 deg (from the pin), meets the
                   peg 6.87 along it, 1.350 off its line - exactly wire r + peg r
-                tang B leaves at -0.04 deg; the rib takes it 1.5 .. 4.5 along
-                coil 3.028 turns, z 38.2 .. 41.02 inside the 41.2 band
-                rate 252.2 N.mm/rev (3.32 active turns, tangs included)
-                24.5 N.mm as fitted -> 3.26 N at the wedge
-                wire 728 MPa, 936 at full pawl lift, vs 1700 - 1.8x
+                tang B leaves at 24.97 deg; the rib takes it 1.5 .. 4.5 along
+                coil 3.097 turns fitted, z 38.2 .. 41.07 inside the 41.2 band
+                rate 247.1 N.mm/rev (3.39 active turns, tangs included)
+                24.0 N.mm as fitted -> 3.18 N at the wedge
+                wire 713 MPa, 917 at full pawl lift, vs 1700 - 1.9x
                 bore closes to 4.61 on the 3.2 pin, fully wound
-                rib clears: pawl peg 7.98, tang A 1.67, coil 0.34, cap 9.16
+                rib clears: pawl peg 9.17, tang A 2.84, coil 0.34, cap 7.75
+                tangs clear: retainer cap 6.92, housing wall 2.39
 
     TANGENTIAL, NOT RADIAL. The previous version sent both legs straight out
     from the pin. A real torsion spring's legs leave the coil along its
@@ -643,9 +648,24 @@ every other component. Everything then lands coaxial and correctly stacked.
     TangAngle then places tang B relative to it. Change CoilOD or WireDia and
     tang A re-solves itself.
 
-    THE ANGLE. Tang A leaves backwards, pointing at its exit angle - 90; tang B
-    forwards, at its exit angle + 90. So TangAngle = (exit B - exit A) + 180,
-    and a whole number of coils always gives 180 - tangs straight opposite.
+    THE ANGLE is the V the tangs open, seen from above - the way catalogues
+    quote a torsion spring's leg angle. Tang A leaves backwards, pointing at
+    its exit angle - 90; tang B forwards, at its exit angle + 90. So for a V of
+    TangAngle, tang B leaves (180 - TangAngle) further round the coil, and a
+    whole number of coils gives 180, straight opposite. Over 180 the tangs
+    cross over one another, at different heights.
+    (The first version measured anticlockwise from A to B instead, so 30 made
+    the tangs point at each other rather than open a 30 deg V.)
+
+    WHY 145. Loading a torsion spring the right way closes its V, and this one
+    is closed by windUp, 35 deg, to fit. Fitted at 145, it is 180 free - the
+    commonest stock torsion spring, exactly 3 coils. The previous default,
+    170, needed a custom spring at 205.
+
+    THE WORKING RANGE IS ABOUT 90 .. 180. Much below 90 tang B swings round to
+    point at the wheel: at 30 it clears the retainer cap by 0.07 and its rib
+    would have to go through the cap and never reaches a wall. The spring now
+    checks the TANGS against the cap and the bore wall, not just the rib.
 
     COILS 3, NOT 4. A close-wound coil of N turns is (N + 1) wires tall: the
     helix climbs one wire per turn, plus half a wire of envelope at each end.
@@ -783,11 +803,11 @@ every other component. Everything then lands coaxial and correctly stacked.
     4. SPRING DIRECTION. It must be fitted WOUND UP, so it pushes tang A
        anticlockwise and the wedge in. Get this wrong and it holds the pawl
        clear of the wheel, which looks right in CAD and ratchets not at all.
-       CHECK BEFORE FITTING: seen from above, measure anticlockwise from
-       tang A to tang B. Free, it must be about 155 deg; fitted, it is 190.
-       So fitting it turns tang B ANTICLOCKWISE relative to tang A, and the
-       coil tightens as you do it. If fitting it means turning tang B the
-       other way, it is the wrong spring.
+       CHECK BEFORE FITTING: free, the tangs sit straight opposite, 180 deg.
+       Fitted, they sit at 145 - so fitting it means pushing them TOWARD each
+       other, and the coil tightens as you do. That is the standard way to
+       load a torsion spring. If you find yourself opening the tangs to fit
+       it, it is the wrong spring.
        (An earlier version said to squeeze the legs and check it resists.
        Every torsion spring resists that - it proves nothing.)
 

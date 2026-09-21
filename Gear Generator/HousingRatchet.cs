@@ -83,8 +83,8 @@
     // Built from the pawl spring's AnchorB line: the face tang B bears on, with
     // the rib to its RIGHT. Wired, the rib follows the spring's TangAngle.
     // Unwired, it falls back to this build's line (the spring prints these).
-    double ancX0    = 19.101, ancY0 = 1.498;   // gear frame
-    double ancX1    = 19.103, ancY1 = 4.498;
+    double ancX0    = 18.177, ancY0 = 2.668;   // gear frame, for TangAngle 145
+    double ancX1    = 16.911, ancY1 = 5.388;
     double ancDepth = 15.0;   // run out this far, then clipped by the outer shell
     double webW     = 7.0;    // web width, tangential. Was 5.0 - with the pawl at
                               // 25 deg the pin reaction swings mostly SIDEWAYS

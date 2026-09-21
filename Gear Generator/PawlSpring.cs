@@ -10,9 +10,10 @@
 //     WireDia     double  spring wire diameter
 //     CoilOD      double  coil outside diameter
 //     Coils       double  WHOLE turns. TangAngle sets the fraction on top.
-//     TangAngle   double  angle between the tangs AS FITTED, seen from above,
-//                         measured ANTICLOCKWISE from tang A to tang B [deg].
-//                         180 = pointing straight opposite = whole turns only
+//     TangAngle   double  the V the tangs open AS FITTED, seen from above [deg]
+//                         - the way spring catalogues quote a leg angle.
+//                         180 = straight opposite; smaller closes the V.
+//                         Over 180 the tangs cross over one another.
 //     TangA       double  length of tang A - the one on the pawl
 //     TangB       double  length of tang B - the one on the housing
 //     BasePlane   Plane   the RACK script's GearPlane
@@ -33,24 +34,31 @@
 //  so the coil axis always sits Rm from it. For its side to bear on the peg,
 //  the peg centre must sit Rm + wire radius + peg radius from the axis,
 //  measured square to the tang - which fixes where tang A has to leave the
-//  coil. TangAngle then places tang B relative to it.
+//  coil. TangAngle then places tang B relative to it: for a V of TangAngle,
+//  tang B leaves the coil (180 - TangAngle) further round.
 //
 //  DIRECTION. +ve rotation about the pivot (anticlockwise from above) drives
 //  the wedge INTO the wheel, so the spring must push tang A anticlockwise. It
-//  is fitted WOUND UP by windUp degrees - tang B turned anticlockwise relative
-//  to tang A, which tightens the coil - and pushes back. Fitted the other way
-//  it holds the pawl OFF the wheel, which looks the same in CAD and does
-//  nothing on the bench.
+//  is fitted with its V CLOSED by windUp degrees - the tangs pushed toward
+//  each other, which tightens the coil, the standard way to load a torsion
+//  spring - and pushes back. Fitted the other way it holds the pawl OFF the
+//  wheel, which looks the same in CAD and does nothing on the bench.
 // ===========================================================================
 
 
 // ===========================================================================
 //  THIS BUILD - 7 inputs and 4 outputs to create on the component:
-//     WireDia 0.7   CoilOD 6.2   Coils 3   TangAngle 190
+//     WireDia 0.7   CoilOD 6.2   Coils 3   TangAngle 145
 //     TangA 9   TangB 6
 //     BasePlane <- the RACK script's GearPlane
 //     outputs: Spring, Rail, AnchorB, Info
 //  Every constant below is already set for this build.
+//
+//  TANGANGLE 145 because the spring you BUY is then exactly 3 coils with its
+//  tangs at 180 - the commonest stock torsion spring there is. Fitting closes
+//  the V by windUp, 180 -> 145. The range that works in this housing is about
+//  90..180: much below 90 tang B points at the wheel and its rib cannot reach
+//  a wall. The Info output checks all of it.
 //
 //  COILS 3, NOT 4. A close-wound coil of N turns is (N + 1) wires tall - the
 //  helix climbs one wire per turn, plus half a wire of envelope at each end.
@@ -73,7 +81,7 @@
     double d   = WireDia   > 1e-9 ? WireDia   : 0.7;
     double Do  = CoilOD    > 1e-9 ? CoilOD    : 6.2;
     double nc  = Coils     > 0.5  ? Math.Floor(Coils + 1e-6) : 3.0;
-    double ang = TangAngle > 1e-9 ? TangAngle : 190.0;
+    double ang = TangAngle > 1e-9 ? TangAngle : 145.0;
     double lA  = TangA     > 1e-9 ? TangA     : 9.0;
     double lB  = TangB     > 1e-9 ? TangB     : 6.0;
     if (Coils > 0.5 && Math.Abs(Coils - nc) > 1e-6)
@@ -102,6 +110,8 @@
     double ribLen   = 3.0;     // ... for this long, measured from where it leaves
                                // the coil. s1 keeps the rib off the coil.
     double capR     = 10.0;    // retainer cap radius, round the WHEEL axis
+    double boreWaist = 26.8;   // the housing's bore - MUST match HousingRatchet,
+    double boreLen  = 50.8;    // for checking the tangs against its wall
     double Emod     = 207000.0;// music wire, ASTM A228 [MPa]
     double sAllow   = 1700.0;  // allowable bending stress for that wire [MPa]
 
@@ -121,11 +131,13 @@
     if (qd <= reachA) { Info = "The pawl peg is too close to the pin for a tangential tang."; return; }
     double thA = qa + Math.Acos(reachA / qd);        // where tang A leaves the coil
 
-    // ---------- tang B: TangAngle anticlockwise from tang A -------------------
+    // ---------- tang B: the V TangAngle opens from tang A ---------------------
     // Tang A leaves BACKWARDS, pointing at thA - 90; tang B FORWARDS, at
-    // thB + 90. So the angle from A to B is (thB - thA) + 180, and a whole
-    // number of coils leaves the tangs pointing straight opposite.
-    double dTh  = ((ang - 180.0) % 360.0 + 360.0) % 360.0;
+    // thB + 90. For them to open a V of TangAngle, tang B must leave the coil
+    // (180 - TangAngle) further round - so a whole number of coils gives 180,
+    // straight opposite. (The first version measured anticlockwise from A to
+    // B instead; there 30 made the tangs point at each other.)
+    double dTh  = ((180.0 - ang) % 360.0 + 360.0) % 360.0;
     double nTot = nc + dTh / 360.0;                  // turns, as fitted
     double thB  = thA + RhinoMath.ToRadians(dTh);
 
@@ -202,6 +214,26 @@
         tangClr = Math.Min(tangClr, ribDist(pinX + tx * cS - ty * sS, tx * sS + ty * cS) - 0.5 * d);
       }
     }
+    // and the tangs themselves, against the retainer cap and the bore wall
+    double ab = 0.5 * boreWaist, db = 0.5 * boreLen - ab;
+    Func<double, double, double> boreGap = delegate(double wx, double wy)
+    {
+      double cxW = Math.Max(-db, Math.Min(db, wx));
+      return ab - Math.Sqrt((wx - cxW) * (wx - cxW) + wy * wy);     // + inside the bore
+    };
+    double tangCap = 1e9, tangWall = 1e9;
+    for (int jT = 0; jT <= 20; jT++)
+    {
+      double fT = jT / 20.0;
+      double axA = ps.X + dA.X * lA * fT, ayA = ps.Y + dA.Y * lA * fT;
+      double axB = pe.X + tB.X * lB * fT, ayB = pe.Y + tB.Y * lB * fT;
+      tangCap  = Math.Min(tangCap, Math.Min(Math.Sqrt(axA * axA + ayA * ayA),
+                                            Math.Sqrt(axB * axB + ayB * ayB)) - capR - 0.5 * d);
+      tangWall = Math.Min(tangWall, Math.Min(boreGap(axA, ayA), boreGap(axB, ayB)) - 0.5 * d);
+    }
+    if (tangCap  < 0.2) log.Add("A tang would hit the retainer cap - raise TangAngle.");
+    if (tangWall < 0.2) log.Add("A tang would run into the housing wall - shorten it.");
+
     double coilClr = ribDist(pinX, 0.0) - 0.5 * Do;
     double capClr  = ribDist(0.0, 0.0) - capR;
     if (pegClr  < 0.2) log.Add("The housing rib would catch the pawl peg as the pawl lifts - change TangAngle.");
@@ -253,14 +285,19 @@
     sb.AppendLine("  body turns        " + (nTot - windUp / 360.0).ToString("0.###") + " free");
     sb.AppendLine("  tangs             tangential, " + lA.ToString("0.#") + " and " +
                   lB.ToString("0.#") + " long");
-    sb.AppendLine("  FREE tang angle   " + (((ang - windUp) % 360.0 + 360.0) % 360.0).ToString("0.#") +
-                  " deg, anticlockwise from A to B seen from above");
+    double freeAng = ((ang + windUp) % 360.0 + 360.0) % 360.0;
+    bool stock = Math.Abs(freeAng % 90.0) < 0.5 || Math.Abs(freeAng % 90.0 - 90.0) < 0.5;
+    sb.AppendLine("  FREE tang angle   " + freeAng.ToString("0.#") + " deg, the V seen from above" +
+                  (stock ? "   - a STOCK free position" : "   - custom"));
     sb.AppendLine("--");
     sb.AppendLine("AS FITTED");
-    sb.AppendLine("  tang angle        " + ang.ToString("0.#") + " deg - wound up " +
+    sb.AppendLine("  tang angle        " + ang.ToString("0.#") + " deg - the V closed by " +
                   windUp.ToString("0.#") + " to fit, which TIGHTENS the coil");
-    sb.AppendLine("  CHECK: fitting it turns tang B ANTICLOCKWISE relative to tang A.");
-    sb.AppendLine("  If it has to go the other way, it is the wrong spring.");
+    sb.AppendLine("  CHECK: fitting it pushes the tangs TOWARD each other, " +
+                  freeAng.ToString("0") + " -> " + ang.ToString("0") + ".");
+    sb.AppendLine("  If it has to be opened to fit, it is the wrong spring.");
+    if (ang > 180.0 + 1e-6)
+      sb.AppendLine("  (over 180 the tangs cross over one another, at different heights)");
     sb.AppendLine("  coil              " + nTot.ToString("0.###") + " turns, z " +
                   (zOff).ToString("0.##") + " .. " + zBtop.ToString("0.##") +
                   "  (band to " + bandTop.ToString("0.#") + ")");
@@ -288,6 +325,9 @@
     sb.AppendLine("  tang A            " + tangClr.ToString("0.##"));
     sb.AppendLine("  coil              " + coilClr.ToString("0.##"));
     sb.AppendLine("  retainer cap      " + capClr.ToString("0.##"));
+    sb.AppendLine("THE TANGS THEMSELVES");
+    sb.AppendLine("  retainer cap      " + tangCap.ToString("0.##"));
+    sb.AppendLine("  housing wall      " + tangWall.ToString("0.##"));
     sb.AppendLine("--");
     sb.AppendLine("rate                " + kRev.ToString("0.#") + " N.mm per revolution  (" +
                   Na.ToString("0.##") + " active turns, tangs included)");
