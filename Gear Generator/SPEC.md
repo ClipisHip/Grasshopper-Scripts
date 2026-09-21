@@ -527,6 +527,8 @@ every other component. Everything then lands coaxial and correctly stacked.
                 RackSlotW     7
                 RackSlotH     7
                 BasePlane     <- rack GearPlane
+                SpringAnchor  <- the PAWL SPRING's AnchorB (type hint: Line).
+                                 Optional; unwired, the fallback below
     CONSTANTS   bellyHi       7
                 lugN/Phi/R    2 / 90 / 24   <- MUST match the plate's screws
                 lugW/lugT     9 / 3
@@ -547,9 +549,10 @@ every other component. Everything then lands coaxial and correctly stacked.
                 webW          7        <- was 5; see the load path
                 relW/relIn    8 / 5
                 relZlo/Zhi    31 / 39
-                ancPhi        -1.97    <- spring rib, FROM THE PIN
-                ancIn/ancOut  4 / 11.5 <- also from the pin
-                ancW          4        <- half of this = the spring's ancHalf
+                ancX0/ancY0   19.101 / 1.498   <- spring rib face, fallback
+                ancX1/ancY1   19.103 / 4.498      when SpringAnchor is unwired
+                ancDepth      15       <- run out this far, then the outer
+                                          shell clips it
                 zOff          0
 
     RESULT      upper  z 7..44   bore 50.8 x 26.8,  outer 54.8 x 30.8
@@ -589,57 +592,94 @@ every other component. Everything then lands coaxial and correctly stacked.
 --------------------------------------------------------------------------------
 ## 15. PAWL SPRING                                 (PawlSpring.cs)
 
+    Built exactly the way WrapSpringCoil.cs builds its spring: a true helix
+    from CreateSpiral, close wound, with each tang carrying on along the
+    helix's own end tangent.
+
     INPUTS      WireDia       0.7
                 CoilOD        6.2
-                Coils         4        <- whole turns, before the leg span
-                LegSpan       95.2     <- INSTALLED included angle [deg]
-                LegA          9        <- to the pawl peg
-                LegB          7.5      <- to the housing rib
+                Coils         3        <- WHOLE turns; TangAngle adds the rest
+                TangAngle     190      <- AS FITTED, anticlockwise from tang A
+                                          to tang B seen from above.
+                                          180 = straight opposite = whole turns
+                TangA         9        <- to the pawl peg
+                TangB         6        <- to the housing rib
                 BasePlane     <- rack GearPlane
+    OUTPUTS     Spring, Rail, AnchorB, Info
+                AnchorB -> HousingRatchet's SpringAnchor, so the rib follows
     CONSTANTS   pinX          16       <- MUST match the pawl's PivotDist
-                pinDia        3.2
-                zOff          38.2     <- its own band, above the pawl
-                aA            -78.91   <- lower leg, FROM THE PIN
-                pegRad        1.0      <- must match the pawl's peg
-                ancHalf       2.0      <- must match half the housing's ancW
-                windUp        35       <- how far it is wound OPEN to fit
-                armRch        6.78     <- pawl arm reach, for the force report
-                hand          +1
-                E / sAllow    207000 / 1700   <- music wire, ASTM A228
+                zOff/bandTop  38.2 / 41.2   <- its band, the housing's sprZhi
+                pegX/pegY     18.84 / -7.48 <- the pawl's spring peg, from
+                pegRad        1.0              the pawl's report
+                flatTangs     true     <- tangent in PLAN, lying flat
+                windUp        35       <- wound UP this far to fit
+                pawlLift      10       <- the pawl's full lift
+                armRch        7.55     <- pivot to the wedge contact
+                ribS1/ribLen  1.5 / 3  <- the stretch of tang B the rib takes
+                hand          +1       <- the anchors are solved for +1
 
-    ORDER       0.7 music wire, OD 6.2, ID 4.8, 4.264 active turns,
-                FREE leg span 60.2 deg, radial legs 9 and 7.5
+    ORDER       0.7 music wire, OD 6.2, ID 4.8, 2.931 body turns free,
+                tangential tangs 9 and 6,
+                FREE tang angle 155 deg (anticlockwise from A to B)
 
-    RESULT      coil z 38.2 .. 41.19 (2.99 tall), bore closes to 4.69 on the
-                  3.2 pin
-                rate 196.2 N.mm/rev -> 19.1 N.mm at 35 deg of wind-up
-                2.81 N at the wedge, 2.38 N on the peg
-                wire 566 MPa vs 1700 allowable - 3.0x
-                at full pawl lift (wound 45 deg): 728 MPa, 3.61 N - 2.3x
+    RESULT      tang A leaves the coil at -10.04 deg (from the pin), meets the
+                  peg 6.87 along it, 1.350 off its line - exactly wire r + peg r
+                tang B leaves at -0.04 deg; the rib takes it 1.5 .. 4.5 along
+                coil 3.028 turns, z 38.2 .. 41.02 inside the 41.2 band
+                rate 252.2 N.mm/rev (3.32 active turns, tangs included)
+                24.5 N.mm as fitted -> 3.26 N at the wedge
+                wire 728 MPa, 936 at full pawl lift, vs 1700 - 1.8x
+                bore closes to 4.61 on the 3.2 pin, fully wound
+                rib clears: pawl peg 7.98, tang A 1.67, coil 0.34, cap 9.16
+
+    TANGENTIAL, NOT RADIAL. The previous version sent both legs straight out
+    from the pin. A real torsion spring's legs leave the coil along its
+    tangent, and so do these now.
+
+    TANG A IS SOLVED, NOT SET. A tangential tang is a line tangent to the coil,
+    so the coil axis always sits Rm from it. For its side to bear on the peg,
+    the peg centre has to sit Rm + wire radius + peg radius from the axis,
+    measured square to the tang. That fixes where tang A leaves the coil;
+    TangAngle then places tang B relative to it. Change CoilOD or WireDia and
+    tang A re-solves itself.
+
+    THE ANGLE. Tang A leaves backwards, pointing at its exit angle - 90; tang B
+    forwards, at its exit angle + 90. So TangAngle = (exit B - exit A) + 180,
+    and a whole number of coils always gives 180 - tangs straight opposite.
+
+    COILS 3, NOT 4. A close-wound coil of N turns is (N + 1) wires tall: the
+    helix climbs one wire per turn, plus half a wire of envelope at each end.
+    4 turns is 3.52 tall and the band is 3.0. The previous version squeezed the
+    pitch to 0.54 on a 0.7 wire to hide that, so its turns ran through each
+    other.
+
+    FLAT TANGS. The helix climbs 2.3 deg. Following it exactly, as the wrap
+    spring does, drops tang A about 0.3 toward the pawl top it clears by only
+    0.2, and lifts tang B out of the band. flatTangs keeps them tangent in plan
+    but level. Set it false to see the difference; the script warns either way.
 
     IT IS NOT IN THE LOAD PATH. The grip is held by the pawl bearing on a tooth
-    flank at up to 169 N. All the spring does is keep the wedge touching the wheel
-    so it finds the next tooth. A stiffer one only makes the ratchet notchy and
-    the release lever heavy.
+    flank at up to 169 N. All the spring does is keep the wedge touching the
+    wheel so it finds the next tooth.
 
-    DIRECTION IS THE WHOLE POINT. +ve rotation about the pivot drives the
-    wedge IN, so the spring must pull its legs TOGETHER - fitted wound OPEN by
-    35 deg. Fitted the other way it holds the pawl OFF the wheel. That looks
-    almost identical in CAD and does nothing at all on the bench.
+    DIRECTION IS THE WHOLE POINT. The spring must push tang A anticlockwise,
+    which drives the wedge in. It is fitted wound UP - tang B turned
+    anticlockwise relative to tang A, tightening the coil - and pushes back.
+    Fitted the other way it holds the pawl OFF the wheel, which looks almost
+    identical in CAD and does nothing on the bench.
 
     WHY NOT A LEAF. There is no room in-plane. At pawl level the bore wall
     closes from radius 22.6 at -29 deg to 16.4 at -54 deg, and a printed leaf
     needs about 12 mm of length to stay under 25 MPa and not creep. Around the
     pin is the one axis with space left.
 
-    TWO ALIGNMENT TRAPS, both of which draw convincingly and do not work:
-      1. A radial leg aimed straight AT its anchor runs THROUGH it. Each leg
-         lies alongside instead, offset by wire radius + anchor radius, and
-         bears on the flank. Hence aA -78.91 for a peg at -69.20.
-      2. The legs are radial FROM THE PIN at x 16. An anchor laid out on a
-         WHEEL-AXIS radial misses them entirely. ancPhi is from the pin.
-    The spring's report prints both anchor positions; take them from there
-    rather than re-deriving.
+    THE RIB FOLLOWS THE SPRING. Change TangAngle and tang B lands somewhere
+    else, so the housing rib has to move with it - this is the same class of
+    fault as the wrap spring's tang missing the collar slot, twice. Wire
+    AnchorB into HousingRatchet's SpringAnchor and it cannot drift. The spring
+    checks the rib against the pawl peg and tang A over the pawl's whole lift,
+    against the coil and against the retainer cap, and warns on any of them;
+    the housing warns if the rib never reaches the wall.
 
 --------------------------------------------------------------------------------
 ## RATCHET LOAD PATH - every number
@@ -740,16 +780,16 @@ every other component. Everything then lands coaxial and correctly stacked.
        way. If the jaws turn out to clamp by pushing OUT, the whole pawl
        assembly has to mirror, which is a bigger change - check that first.
 
-    4. SPRING DIRECTION. It must be fitted SPREAD - its legs pulled further
-       apart than they sit free - so it pulls them back together. Get this
-       wrong and it holds the pawl clear of the wheel, which looks right in
-       CAD and ratchets not at all.
-       CHECK BEFORE FITTING: measure the free angle between the legs. It must
-       be about 60 deg, SMALLER than the 95 deg it sits at in the housing, so
-       fitting it means spreading the legs. If you find yourself squeezing
-       them together to fit it, it is the wrong spring.
-       (An earlier version of this said to squeeze the legs and check it
-       resists. Every torsion spring resists that - it proves nothing.)
+    4. SPRING DIRECTION. It must be fitted WOUND UP, so it pushes tang A
+       anticlockwise and the wedge in. Get this wrong and it holds the pawl
+       clear of the wheel, which looks right in CAD and ratchets not at all.
+       CHECK BEFORE FITTING: seen from above, measure anticlockwise from
+       tang A to tang B. Free, it must be about 155 deg; fitted, it is 190.
+       So fitting it turns tang B ANTICLOCKWISE relative to tang A, and the
+       coil tightens as you do it. If fitting it means turning tang B the
+       other way, it is the wrong spring.
+       (An earlier version said to squeeze the legs and check it resists.
+       Every torsion spring resists that - it proves nothing.)
 
     5. PIN RETENTION. The script cuts ONE 3.2 hole straight through post, webs
        and all, so a 3.0 dowel is +0.2 loose in the webs as well as in the

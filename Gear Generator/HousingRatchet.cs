@@ -18,10 +18,12 @@
 
 
 // ===========================================================================
-//  THIS BUILD - 8 inputs to create on the component:
+//  THIS BUILD - 10 inputs to create on the component:
 //     BoreWaist 26.8   BoreLength 50.8   WallThk 2   Height 44
 //     BellyWaist 36    RelSlotDeg -29    RackSlotW 7   RackSlotH 7
-//     BasePlane <- the RACK script's GearPlane
+//     BasePlane    <- the RACK script's GearPlane
+//     SpringAnchor <- the PAWL SPRING's AnchorB output (type hint: Line).
+//                     Optional - unwired, the rib uses this build's position.
 //  Every constant below is already set for this build.
 // ===========================================================================
 
@@ -30,6 +32,7 @@
 //    private void RunScript(double BoreWaist, double BoreLength, double WallThk,
 //                           double Height, double BellyWaist, double RelSlotDeg,
 //                           double RackSlotW, double RackSlotH, Plane BasePlane,
+//                           Line SpringAnchor,
 //                           ref object Body, ref object Info)
 // ---------------------------------------------------------------------------
 
@@ -76,14 +79,13 @@
                               // wraps the PIN, so the post cannot exist here either:
                               // a 4.69 coil bore will not pass a 6.0 post.
 
-    // --- anchor for the spring's upper leg ------------------------------------
-    // Take ancPhi straight from the spring script's report - it is measured
-    // FROM THE PIN and already carries the offset that puts the rib beside the
-    // leg rather than through it.
-    double ancPhi   = -1.97;  // rib centre line, from the PIN [deg]
-    double ancIn    =  4.0;   // rib runs from here, out from the pin ...
-    double ancOut   = 11.5;   // ... to here, where it meets the outer shell
-    double ancW     = 4.0;    // rib width. HALF of this must match the spring's ancHalf
+    // --- anchor rib for the spring's tang B -----------------------------------
+    // Built from the pawl spring's AnchorB line: the face tang B bears on, with
+    // the rib to its RIGHT. Wired, the rib follows the spring's TangAngle.
+    // Unwired, it falls back to this build's line (the spring prints these).
+    double ancX0    = 19.101, ancY0 = 1.498;   // gear frame
+    double ancX1    = 19.103, ancY1 = 4.498;
+    double ancDepth = 15.0;   // run out this far, then clipped by the outer shell
     double webW     = 7.0;    // web width, tangential. Was 5.0 - with the pawl at
                               // 25 deg the pin reaction swings mostly SIDEWAYS
                               // (70 N radial, 150 N across), which BENDS the webs.
@@ -123,8 +125,7 @@
       log.Add("Upper web is only " + (postZhi - sprZhi).ToString("0.##") +
               " tall - it carries half the pin load in bending and needs ~1.8. " +
               "Raise Height.");
-    if (ancIn <= 0.5 * postDia)
-      log.Add("Spring anchor rib starts inside the post / coil - raise ancIn.");
+
     if (ribZhi > pawlZlo) log.Add("Ribs reach into the pawl's swing.");
 
     // ---------- stadium helper -----------------------------------------------
@@ -265,21 +266,47 @@
     if (webHi.SolidOrientation == BrepSolidOrientation.Inward) webHi.Flip();
     inward.Add(webLo); inward.Add(webHi);
 
-    // anchor rib the spring's upper leg pushes against, in its own band.
-    // MEASURED FROM THE PIN, not the wheel axis - the spring's legs are radial
-    // from the pin, so a rib laid out on a wheel-axis radial misses them.
-    // It also sits to one SIDE of the leg, on the side taking the reaction.
+    // anchor rib for the spring's tang B. Its face is the AnchorB line; it runs
+    // out to the RIGHT of it until the outer shell clips it, so it always
+    // lands in the wall and never pokes out through it. It stops 0.5 short of
+    // the top so its top face is not coplanar with the rim.
+    string ancSrc = "fallback";
     {
-      double aa = RhinoMath.ToRadians(ancPhi);
-      Point3d pinPt = new Point3d(pawlX, 0, 0);
-      Vector3d rad = new Vector3d(Math.Cos(aa), Math.Sin(aa), 0.0);
-      Vector3d tng = Vector3d.CrossProduct(Vector3d.ZAxis, rad); tng.Unitize();
-      Brep anc = new Box(new Plane(pinPt, rad, tng),
-                         new Interval(ancIn, ancOut),
-                         new Interval(-0.5 * ancW, 0.5 * ancW),
-                         new Interval(pawlZhi, sprZhi)).ToBrep();
-      if (anc.SolidOrientation == BrepSolidOrientation.Inward) anc.Flip();
-      inward.Add(anc);
+      Point3d aP0 = new Point3d(ancX0, ancY0, 0.0), aP1 = new Point3d(ancX1, ancY1, 0.0);
+      if (SpringAnchor.IsValid && SpringAnchor.Length > 1e-6)
+      {
+        Plane bpA = BasePlane.IsValid ? BasePlane : Plane.WorldXY;
+        Line la = SpringAnchor;
+        la.Transform(Transform.PlaneToPlane(bpA, Plane.WorldXY));   // back into the gear frame
+        aP0 = new Point3d(la.From.X, la.From.Y, 0.0);
+        aP1 = new Point3d(la.To.X, la.To.Y, 0.0);
+        ancSrc = "from the spring";
+      }
+      Vector3d aU = aP1 - aP0; double aLen = aU.Length; aU.Unitize();
+      Vector3d aR = new Vector3d(aU.Y, -aU.X, 0.0);                   // its RIGHT
+      Brep ancBox = new Box(new Plane(aP0, aU, aR), new Interval(0.0, aLen),
+                            new Interval(0.0, ancDepth),
+                            new Interval(pawlZhi, postZhi - 0.5)).ToBrep();
+      if (ancBox.SolidOrientation == BrepSolidOrientation.Inward) ancBox.Flip();
+      Brep outerB = exU.ToBrep();
+      if (outerB.SolidOrientation == BrepSolidOrientation.Inward) outerB.Flip();
+      Brep[] clip = Brep.CreateBooleanIntersection(ancBox, outerB, tol);
+      if (clip != null && clip.Length > 0)
+      {
+        Brep bestC = clip[0]; double bvC = -1.0;
+        foreach (Brep b in clip) { double v = b.GetBoundingBox(true).Volume; if (v > bvC) { bvC = v; bestC = b; } }
+        inward.Add(bestC);
+      }
+      else log.Add("Spring anchor rib could not be clipped to the shell.");
+
+      // it must actually reach the wall: its far end has to lie outside the shell
+      double fx = aP0.X + aU.X * 0.5 * aLen + aR.X * ancDepth;
+      double fy = aP0.Y + aU.Y * 0.5 * aLen + aR.Y * ancDepth;
+      double cxS = Math.Max(-db, Math.Min(db, fx));
+      if (Math.Sqrt((fx - cxS) * (fx - cxS) + fy * fy) < ao)
+        log.Add("The spring anchor rib never reaches the wall - the spring's TangAngle " +
+                "points tang B's rib side into open bore. Change TangAngle.");
+      ancX0 = aP0.X; ancY0 = aP0.Y; ancX1 = aP1.X; ancY1 = aP1.Y;   // for the report
     }
 
     string inState;
@@ -337,9 +364,9 @@
     sb.AppendLine("  release tail has the whole band to itself.");
     sb.AppendLine("SPRING BAND         z " + pawlZhi.ToString("0.##") + " .. " + sprZhi.ToString("0.##") +
                   "   (" + (sprZhi - pawlZhi).ToString("0.##") + " for a 2.99 coil)");
-    sb.AppendLine("  anchor rib        " + ancW.ToString("0.##") + " wide at " + ancPhi.ToString("0.##") +
-                  " deg FROM THE PIN, spanning " + ancIn.ToString("0.#") + " .. " +
-                  ancOut.ToString("0.#") + " out from it");
+    sb.AppendLine("  anchor rib        face (" + ancX0.ToString("0.##") + ", " + ancY0.ToString("0.##") +
+                  ") -> (" + ancX1.ToString("0.##") + ", " + ancY1.ToString("0.##") + "), " + ancSrc);
+    sb.AppendLine("                    runs out to the wall, clipped to the shell");
     sb.AppendLine("  the post is ABSENT here too - a 4.69 coil bore will not");
     sb.AppendLine("  pass a " + postDia.ToString("0.#") + " post, so the coil rides the PIN.");
     sb.AppendLine("  pin spans " + (sprZhi - pawlZlo).ToString("0.##") +
