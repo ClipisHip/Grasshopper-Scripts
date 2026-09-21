@@ -6,7 +6,7 @@
 //  the housing wall.
 //
 //  IT DOES NOT HOLD THE GRIP. The grip is held by the pawl bearing on a tooth
-//  flank - 84 N in compression. All this spring does is keep the finger
+//  flank - up to 168 N in compression. All this spring does is keep the wedge
 //  touching the wheel so it finds the next tooth. A few newtons is plenty, and
 //  a stiffer spring only makes the ratchet harder to push and the release
 //  lever heavier.
@@ -17,7 +17,7 @@
 //  creep. Going around the pin uses the one axis that still has space.
 //
 //  DIRECTION - THE WHOLE POINT. +ve rotation about the pivot (CCW seen from
-//  above) drives the finger INTO the wheel. The spring must therefore pull its
+//  above) drives the wedge INTO the wheel. The spring must therefore pull its
 //  two legs TOGETHER, so it is fitted wound OPEN by WindUp degrees and tries
 //  to close. Fit it the other way and it holds the pawl off the wheel, which
 //  looks almost identical in CAD and does nothing at all on the bench.
@@ -66,7 +66,9 @@
     double ancHalf = 2.0;     // housing rib HALF width - must match the housing
     double hand    = 1.0;     // +1 right hand
     double windUp  = 35.0;    // how far it is wound OPEN to install it [deg]
-    double armRch  = 6.78;    // pawl arm reach, to report the force at the finger
+    double pawlLift = 10.0;   // the pawl's full lift, from its report [deg]. Lifting
+                              // winds the spring FURTHER open, so this is its worst case
+    double armRch  = 6.78;    // pawl arm reach, to report the force at the wedge
     double Emod    = 207000.0;// music wire, ASTM A228 [MPa]
     double sAllow  = 1700.0;  // allowable bending stress for that wire [MPa]
     int    seg     = 24;      // helix points per turn
@@ -94,17 +96,18 @@
     double kRev = Emod * Math.Pow(d, 4) / (10.8 * Dm * nTot);   // N.mm per revolution
     double M    = kRev * windUp / 360.0;                        // N.mm at the pin
     double sig  = 32.0 * M / (Math.PI * Math.Pow(d, 3));        // wire bending
-    double Ffin = M / armRch;                                   // at the pawl finger
+    double Ffin = M / armRch;                                   // at the pawl wedge
     double Fpeg = M / La;                                       // on the pawl peg
 
-    if (sig > sAllow)
-      log.Add("Wire at " + sig.ToString("0") + " MPa vs " + sAllow.ToString("0") +
+    double sigMax = sig * (windUp + pawlLift) / windUp;          // at full lift
+    if (sigMax > sAllow)
+      log.Add("Wire reaches " + sigMax.ToString("0") + " MPa at full lift vs " + sAllow.ToString("0") +
               " allowable - thicker wire, or fewer degrees of wind-up.");
     if (Ffin < 1.0)
-      log.Add("Only " + Ffin.ToString("0.##") + " N at the finger - it may not follow the " +
+      log.Add("Only " + Ffin.ToString("0.##") + " N at the wedge - it may not follow the " +
               "teeth reliably. More wind-up, or thicker wire.");
     if (Ffin > 8.0)
-      log.Add("More than 8 N at the finger - the ratchet will feel notchy and the " +
+      log.Add("More than 8 N at the wedge - the ratchet will feel notchy and the " +
               "release lever heavy for no benefit.");
 
     // ---------- path: leg A, helix, leg B ------------------------------------
@@ -163,7 +166,7 @@
     sb.AppendLine("AS INSTALLED");
     sb.AppendLine("  leg span          " + ls.ToString("0.#") + " deg - wound OPEN by " +
                   windUp.ToString("0.#"));
-    sb.AppendLine("  so it pulls its legs TOGETHER, which drives the finger IN.");
+    sb.AppendLine("  so it pulls its legs TOGETHER, which drives the wedge IN.");
     sb.AppendLine("  coil              z " + zOff.ToString("0.##") + " .. " +
                   (zOff + coilH).ToString("0.##") + "  (" + coilH.ToString("0.##") + " tall)");
     sb.AppendLine("  bore when wound   " + IdWound.ToString("0.##") + " on the " +
@@ -194,13 +197,16 @@
     sb.AppendLine("--");
     sb.AppendLine("rate                " + kRev.ToString("0.#") + " N.mm per revolution");
     sb.AppendLine("moment at the pin   " + M.ToString("0.##") + " N.mm");
-    sb.AppendLine("  at the finger     " + Ffin.ToString("0.##") + " N");
+    sb.AppendLine("  at the wedge      " + Ffin.ToString("0.##") + " N");
     sb.AppendLine("  on peg A          " + Fpeg.ToString("0.##") + " N");
     sb.AppendLine("wire stress         " + sig.ToString("0") + " MPa   vs " +
                   sAllow.ToString("0") + " allowable  (" + (sAllow / sig).ToString("0.#") + "x)");
+    sb.AppendLine("  at full lift      " + sigMax.ToString("0") + " MPa, " +
+                  (Ffin * (windUp + pawlLift) / windUp).ToString("0.##") + " N at the wedge  (wound " +
+                  (windUp + pawlLift).ToString("0") + " deg, " + (sAllow / sigMax).ToString("0.#") + "x)");
     sb.AppendLine("--");
-    sb.AppendLine("The ratchet holds 84 N on the tooth flank. This spring is NOT");
-    sb.AppendLine("part of that load path - it only keeps the finger in contact.");
+    sb.AppendLine("The ratchet holds up to 168 N on the tooth flank. This spring is NOT");
+    sb.AppendLine("part of that load path - it only keeps the wedge in contact.");
     if (log.Count > 0) { sb.AppendLine("--"); foreach (string t in log) sb.AppendLine("! " + t); }
 
     Body = body;

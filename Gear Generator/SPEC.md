@@ -16,7 +16,9 @@ Verified configuration. Every number below has been checked against the others.
     OR SPEND IT UNEVENLY. Section 3-ALT is a two-stage cam that puts most of
     the stroke into fast travel and the last part into a steep lead, giving
     158 N for the final 6 mm of jaw travel. Same identity, better placed.
-    The numbers below are for the CONSTANT-lead cam of section 3.
+    The gear, cam and sleeve numbers below are for the CONSTANT-lead cam of
+    section 3. The RATCHET sections are sized for the two-stage cam's squeeze,
+    1.92 N.m - the worst case either cam can put on them.
 
 Wire the RACK script's `GearPlane` output into the `BasePlane` / `Pln` input of
 every other component. Everything then lands coaxial and correctly stacked.
@@ -370,32 +372,62 @@ every other component. Everything then lands coaxial and correctly stacked.
 #  against soft plastic - the anchor tang undersized 3.4x, and the hub
 #  thread-forming on the bench. See OPEN PROBLEM - THE ANCHOR TANG. The pawl
 #  loads a tooth flank in COMPRESSION instead, which printed plastic takes.
-#  Cost: adjustment goes from stepless to 1.885 mm steps at the rack.
+#  Cost: adjustment goes from stepless to 2.513 mm steps at the rack.
 ================================================================================
 
 --------------------------------------------------------------------------------
 ## 12. RATCHET WHEEL - part of the rotor           (RatchetWheel.cs)
 
     INPUTS      OuterDia      24       <- 1.4 clear in the 26.8 bore waist
-                Teeth         40
-                ToothDepth    0.8
+                Teeth         30       <- was 40, see WHY 30 x 1.4
+                ToothDepth    1.4      <- was 0.8
                 Thickness     8        <- see WHY 8 below
                 BoreDia       6.4      <- MUST match the gear and cam
-                LockAngle     8        <- undercut; 0 lets the pawl climb out
+                LockAngle     8        <- positive RAKE: tip leans AWAY from
+                                          the pawl. See WHY NOT AN UNDERCUT
                 RootFillet    0
                 BasePlane     <- rack GearPlane
     CONSTANTS   mod           1.5      <- report only
                 zGear         16       <- report only
-                Treq          0.96     <- holding torque, report only
-                hand          +1       <- flip if it locks on the push
+                Treq          1.92     <- WORST case, the two-stage squeeze
+                hand          +1       <- do NOT flip on its own: the pawl is
+                                          built for +1. Flip the CAM instead
+                phase         25       <- MUST equal the pawl's ContactAngle
                 zOff          30       <- sits ON the cam top
 
-    RESULT      wheel z 30..38, tip dia 24, root dia 22.40
-                tooth pitch 1.885, step 9.000 deg
-                ONE CLICK = 1.885 mm of rack (m1.5 z16)
-                pawl contact 84 N at 0.96 N.m
-                tooth bending 19.0 MPa on the 6 mm the pawl engages (POM ~65)
-                15.9 clicks over the full 143.2 deg of travel
+    RESULT      wheel z 30..38, tip dia 24, root dia 21.20
+                tooth pitch 2.513, step 12.000 deg
+                ONE CLICK = 2.513 mm of rack (m1.5 z16)
+                pawl contact 169 N at 1.92 N.m
+                tooth bending 26.8 MPa on the 6 mm the pawl engages (POM ~65)
+                11.9 clicks over the full 143.2 deg of travel,
+                2.4 of them inside the two-stage cam's 6 mm squeeze
+
+    WHY 30 x 1.4 AND NOT 40 x 0.8. What limits a ratchet this small is not
+    tooth strength but CONTACT - how much of the locking face the pawl bears
+    on. Two rules fall out of the sawtooth shape:
+      - DEPTH sets the face pressure. It falls as 1/depth; tooth count does
+        not enter.
+      - TOOTH COUNT sets the bending, because a sawtooth's base is exactly one
+        pitch wide - its face starts where the neighbour's ramp ends. Bending
+        grows with teeth^2 x depth.
+    At 40 teeth the base is stuck at ~1.7 mm however deep you cut, so
+    deepening only trades face pressure for bending, with a ceiling near
+    1.4 mm. 30 x 1.4 has the face pressure of 40 x 1.4 at about half the
+    bending. The cost is 2.513 mm of rack per click instead of 1.885.
+
+    WHY NOT AN UNDERCUT. An undercut face would hook the pawl harder - but the
+    moment that keeps a pawl in under load is the SAME moment the release
+    lever has to beat. Tail force at full load: 55 N as built, 68 N with a
+    radial face, 79 N undercut. The pawl self-engages from its pivot geometry
+    alone, so the rake is left positive. (The script's comment used to claim
+    this face pulled the pawl in. It pushes it out, slightly; the pivot
+    geometry is what wins.)
+
+    PHASE puts a tooth root exactly at the pawl's contact angle, so the model
+    shows the pawl ENGAGED. Physically it changes nothing - the wheel turns
+    until it catches - but without it the model showed the pawl buried in a
+    tooth, which hid what was actually bearing.
 
     WHY 8 THICK, STARTING AT 30. The pawl swings at z 32..38, so the teeth have
     to be there - but the cam tops out at 30, and a wheel starting at 32 would
@@ -412,10 +444,10 @@ every other component. Everything then lands coaxial and correctly stacked.
 ## 13. RATCHET PAWL                                (RatchetPawl.cs)
 
     INPUTS      RatchetDia    24       <- MUST match the wheel
-                Teeth         40       <- MUST match the wheel
-                ToothDepth    0.8      <- MUST match the wheel
+                Teeth         30       <- MUST match the wheel
+                ToothDepth    1.4      <- MUST match the wheel
                 PivotDist     16       <- MUST equal the housing's pawlX
-                ContactAngle  25
+                ContactAngle  25       <- MUST equal the wheel's phase
                 ArmWidth      5
                 Thickness     6
                 PivotHoleDia  3.2
@@ -423,42 +455,60 @@ every other component. Everything then lands coaxial and correctly stacked.
                 BasePlane     <- rack GearPlane
     CONSTANTS   bossDia       6.8      <- max is 2*(PivotDist - R) = 8.0
                 armClr        0.5      <- arm inner edge to the tip circle
-                rootClr       0.15     <- under the finger, so it never bottoms
+                rootClr       0.15     <- floor for the wedge tip off the root
+                rampClr       0.15     <- wedge back flank to the tooth behind
+                wedgeTop      0.85     <- wedge width at the tip circle / pitch
                 lockAng       8        <- MUST match the wheel's LockAngle
+                mu            0.25     <- friction, for the release report
                 pegR/Dia/H    8 / 2 / 2   <- spring peg, on the tail
-                Treq          0.96
+                Treq          1.92     <- WORST case, the two-stage squeeze
                 zOff          32       <- level with the wheel's upper 6 mm
 
     RESULT      pawl z 32..38, pivot at (16, 0)
                 arm 6.78 long, 5 wide, ending at radius 15.0
-                finger 1.20 wide, radius 11.35 .. 15.0 (tooth pitch 1.85)
-                SELF-ENGAGING - the tooth load drives the finger further in
-                contact force 84 N; 99.7% of it COMPRESSION along the arm,
-                  2.8 MPa, with only 6 N transverse
+                WEDGE bears on 1.253 of the 1.4 face, 2.136 wide at the
+                  tip circle, tip 0.157 off the root
+                SELF-ENGAGING, moment arm 2.14
+                contact force 169 N; 99.7% of it COMPRESSION along the arm
+                face pressure 22.4 MPa     wedge bending 23.0 MPa
+                RELEASE: lift 10.0 deg, tail moves 2.09 mm, 55 N on the tail
                 tail tip at radius 23.16, angle -29.0 deg
                 spring peg at (18.84, -7.48), z 38..40
+
+    THE TIP IS A WEDGE, NOT A FINGER. The notch between two teeth is a V: zero
+    wide at the root, a full pitch at the tip. The old flat-bottomed finger
+    stopped wherever the V narrowed to its own width, so it bore on only ~40%
+    of the face HOWEVER DEEP THE TOOTH - 0.34 of 0.8 mm, and 0.54 of 1.4. At
+    168 N that was 83 MPa on the face and 79 MPa bending the finger, both over
+    POM's ~65. The wedge is built from the tooth's own lines: loaded flank ON
+    the locking face, back flank along the ramp of the tooth behind with
+    rampClr to spare. It bears on nearly the whole face, and it is widest
+    exactly where the bending is worst.
+
+    VERIFIED BY SIMULATION against the wheel profile, not assumed:
+      - engaged: no overlap anywhere; the wedge only touches the face
+      - free way (wheel CCW): the pawl lifts smoothly to 8.9 deg and drops into
+        the next notch at 12 deg; no jam at any point
+      - loaded way (wheel CW): push the face 0.2 deg into the wedge and ANY
+        lift only deepens the overlap, 0.042 -> 0.173 mm at 3 deg. The load
+        cannot lever the pawl out.
+    The release needs 10.0 deg rather than 8.9, because it lifts against a
+    wheel that is standing still rather than turning away.
 
     THE PAWL IS A HOOK, AND HAS TO BE. A straight arm from the pivot TO the
     contact point can never clear the wheel: the perpendicular distance from
     the centre to such a chord is at most the contact radius, which is inside
     the tip circle BY DEFINITION. It is a bound, not a tuning problem - no
     pivot position or contact angle escapes it. So the arm stops outside the
-    teeth at radius 15 and a narrow finger carries on down to 11.35.
-
-    The first build had all three features cutting the wheel: boss 0.60 in,
-    finger 0.40 past the root, and the arm 3.43 deep through the body of it.
-    The Info output now prints all three clearances; they must stay positive.
+    teeth at radius 15 and the wedge carries on down.
 
     CONTACT 25 DEG, NOT 60. Self-engagement flips sense near 44 deg, where the
     contact force line passes through the pivot. Both sides work. Below it the
     arm points almost straight at the contact, so the load is compression
     rather than bending and the whole pawl is far more compact.
-    The self-engagement test uses the REAL undercut locking face - the first
-    version assumed a tangential load and ignored LockAngle entirely, which is
-    what the undercut is for.
 
     The tail at -29.0 deg is what sets the housing's release gap. Pushing the
-    tail lifts the finger out and the rotor spins back under the return
+    tail lifts the wedge out and the rotor spins back under the return
     springs; the spring below pushes it the other way.
 
 --------------------------------------------------------------------------------
@@ -563,16 +613,17 @@ every other component. Everything then lands coaxial and correctly stacked.
     RESULT      coil z 38.2 .. 41.19 (2.99 tall), bore closes to 4.69 on the
                   3.2 pin
                 rate 196.2 N.mm/rev -> 19.1 N.mm at 35 deg of wind-up
-                2.81 N at the finger, 2.38 N on the peg
+                2.81 N at the wedge, 2.38 N on the peg
                 wire 566 MPa vs 1700 allowable - 3.0x
+                at full pawl lift (wound 45 deg): 728 MPa, 3.61 N - 2.3x
 
     IT IS NOT IN THE LOAD PATH. The grip is held by the pawl bearing on a tooth
-    flank at 84 N. All the spring does is keep the finger touching the wheel
+    flank at up to 169 N. All the spring does is keep the wedge touching the wheel
     so it finds the next tooth. A stiffer one only makes the ratchet notchy and
     the release lever heavy.
 
     DIRECTION IS THE WHOLE POINT. +ve rotation about the pivot drives the
-    finger IN, so the spring must pull its legs TOGETHER - fitted wound OPEN by
+    wedge IN, so the spring must pull its legs TOGETHER - fitted wound OPEN by
     35 deg. Fitted the other way it holds the pawl OFF the wheel. That looks
     almost identical in CAD and does nothing at all on the bench.
 
@@ -595,33 +646,41 @@ every other component. Everything then lands coaxial and correctly stacked.
 
         ratchet wheel  ->  pawl  ->  pin  ->  post  ->  webs  ->  shell
 
-    Contact force 84 N (= 0.96 N.m / 11.4 mm contact radius). It was 168 until
-    the jaw travel doubled; halving the grip halved the torque with it.
+    DESIGN LOAD 169 N contact - 1.92 N.m at the 11.38 contact radius, which is
+    the two-stage cam's squeeze. The constant-lead cam gives half, 84 N. Both
+    columns below. Every row conservatively takes the WHOLE contact force
+    through the pin.
+
+                                       @169 N     @84 N
+        FACE PRESSURE on the tooth      22.4       11.2 MPa   <- was missing
+        WEDGE bending at its root       23.0       11.5 MPa   <- was missing
+        wheel tooth bending             26.8       13.4 MPa   on the 6 mm engaged
+        pawl arm compression             5.6        2.8 MPa   99.7% along the arm
+        pin double shear                10.5        5.2 MPa   METAL pin
+        pin bending                    136         68   MPa   steel dowel, 9.4 free
+        pin bearing in the pawl          8.8        4.4 MPa
+        web compression                  2.8        1.4 MPa
+        web bending                     33.2       16.6 MPa   POM ~65
+
+    THE TWO ROWS THAT WERE MISSING ARE THE ONES THAT MATTER. This table used to
+    check tooth bending, the pin and the webs, and not the pressure on the
+    face or the pawl's tip - which are what actually limit a ratchet this
+    small. With the old 40 x 0.8 wheel and flat finger they were 83 MPa and
+    79 MPa at 168 N, both over POM's ~65: the tooth tip would crush and creep,
+    the pawl ride out, and the grip let go all at once. See sections 12, 13.
 
     WITH THE CONTACT AT 25 DEG the arm points almost straight at it, so 99.7%
-    of that runs ALONG the arm - 2.8 MPa of compression, with only 6 N trying
-    to bend it. That is the whole reason for the small contact angle.
+    of the load runs ALONG the arm as compression. The same rotation swings the
+    PIN reaction sideways - mostly across the webs rather than along them - so
+    they take it in BENDING, and webW went 5 -> 7. At the full squeeze load
+    that is still needed: webW 5 would put them at 64 MPa.
 
-    The same rotation, though, swings the PIN reaction from mostly radial to
-    mostly sideways: 35.0 N out toward the wall, 75.0 N across it. The webs
-    run radially, so they now take that load in BENDING rather than
-    compression, and webW went 5 -> 7 to absorb it.
-
-        wheel tooth bending      19.0 MPa    POM ~65, on the 6 mm engaged
-        pawl arm compression      2.8 MPa    99.7% of 84 N over 5 x 6
-        pin double shear          5.2 MPa    METAL pin
-        pin bending              68    MPa   steel dowel, 9.4 unsupported
-        pin bearing in the pawl   4.4 MPa    6.0 mm of pawl
-        web compression           1.4 MPa    35.0 N over 2 x 7.0 x 1.8
-        web bending              16.6 MPa    75.0 N, 6.4 span, Z 14.7
-
-    WEB BENDING IS STILL THE TIGHTEST NUMBER, but at 16.6 against POM's ~65 it
-    now has a margin of 3.9 rather than 2.0. webW 7 is no longer needed on
-    strength grounds - it is kept because dropping back to 5 would only save
-    2 mm of nothing, and the margin is cheap insurance on a printed part.
+    WEB BENDING IS NOW THE TIGHTEST NUMBER at 33.2 against ~65, a margin of
+    2.0. Widen webW before anything else if it needs more: the stress goes as
+    1/webW^2.
 
     A PRINTED 3.2 PIN WOULD SEE 10.5 MPa IN DOUBLE SHEAR, which sounds fine
-    until you remember it is printed across the layers - and it now also spans
+    until you remember it is printed across the layers - and it also spans
     9.4 mm unsupported between the two webs at 136 MPa. Use a metal pin - a
     3 mm dowel or a cut-down M3 - and drill the post 3.2.
 
@@ -673,16 +732,24 @@ every other component. Everything then lands coaxial and correctly stacked.
        instead of butting it. 30.5 is still below pawlZlo 31.8, so the script's
        own check stays happy.
 
-    3. DIRECTION, same as the wrap spring. Pushing down must turn the gear the
-       way the pawl RIDES OVER the teeth. 50/50 and invisible in CAD. If it
-       locks on the first push, flip `hand` on the cam - or on the wheel, which
-       mirrors the teeth instead.
+    3. DIRECTION. The ratchet is ONE-HANDED: it free-wheels CCW seen from
+       above and locks CW. CCW is the rotation that RETRACTS both racks into
+       the housing, so the jaws must clamp by being pulled IN. If pushing
+       down locks on the first push, flip `hand` on the CAM. Do NOT flip it on
+       the wheel alone - the wedge is built for +1 and would face the wrong
+       way. If the jaws turn out to clamp by pushing OUT, the whole pawl
+       assembly has to mirror, which is a bigger change - check that first.
 
-    4. SPRING HAND. The coil must be wound so that opening it by 35 deg
-       stores energy in the closing direction. Get this wrong and it holds the
-       pawl clear of the wheel - which looks right in CAD and ratchets not at
-       all. Check it by hand before assembly: squeeze the legs together and the
-       spring should resist.
+    4. SPRING DIRECTION. It must be fitted SPREAD - its legs pulled further
+       apart than they sit free - so it pulls them back together. Get this
+       wrong and it holds the pawl clear of the wheel, which looks right in
+       CAD and ratchets not at all.
+       CHECK BEFORE FITTING: measure the free angle between the legs. It must
+       be about 60 deg, SMALLER than the 95 deg it sits at in the housing, so
+       fitting it means spreading the legs. If you find yourself squeezing
+       them together to fit it, it is the wrong spring.
+       (An earlier version of this said to squeeze the legs and check it
+       resists. Every torsion spring resists that - it proves nothing.)
 
     5. PIN RETENTION. The script cuts ONE 3.2 hole straight through post, webs
        and all, so a 3.0 dowel is +0.2 loose in the webs as well as in the
@@ -690,11 +757,27 @@ every other component. Everything then lands coaxial and correctly stacked.
        2.9 for a press fit and leave the pawl at 3.2, or use a pin with a head
        or an E-clip groove. Not a load problem, just a fall-out problem.
 
-    6. RESOLUTION. One click is 1.885 mm at the rack, so the grip lands
-       somewhere in a 1.885 mm band rather than exactly where the user stopped
-       pushing. Cloth compresses far more than that, so this is expected to be
-       invisible in use - but it is the one thing the wrap spring did better,
-       and it is the reason to keep section 5-8 on file.
+    6. RESOLUTION - GIVE-BACK. One click is 2.513 mm at the rack. When the user
+       lets go, the jaws spring back until the pawl catches: anywhere from 0
+       to one full click, 1.26 mm on average. That comes straight off the
+       squeeze, so the cloth must compress by comfortably more than 2.5 mm
+       between the jaws for the grip to survive it.
+       MEASURE IT: how far do the jaws keep closing after they first touch the
+       cloth? 6 mm or more and this is invisible. Around 3 mm and it is not.
+       This is the one thing the wrap spring did better, and the reason to
+       keep sections 5-8 on file. (This item used to call the resolution
+       'invisible' outright. That was too glib: the two-stage cam's whole
+       squeeze is only 6 mm, 2.4 clicks.)
+
+    7. RELEASE UNDER LOAD - 55 N ON THE TAIL at the full squeeze, 28 N at the
+       constant-lead cam's load. Too much for a thumb straight on the tail.
+       It is not a flaw of this pawl: the moment that keeps ANY self-engaging
+       pawl in under load is the same moment its release has to beat, plus
+       friction dragging along the face. Two ways out:
+         a. unload first - push the sleeve down a touch, which takes the load
+            off the pawl, then the lever only fights the ~3 N pawl spring
+         b. give the release lever ~3-4x leverage onto the tail
+       (a) needs no parts. Decide which before designing the lever.
 
 --------------------------------------------------------------------------------
 ## BENCH TEST FOR THE CLUTCH

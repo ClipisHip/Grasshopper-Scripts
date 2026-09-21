@@ -24,7 +24,7 @@
 
 // ===========================================================================
 //  THIS BUILD - 10 inputs to create on the component:
-//     RatchetDia 24   Teeth 40   ToothDepth 0.8   PivotDist 16
+//     RatchetDia 24   Teeth 30   ToothDepth 1.4   PivotDist 16
 //     ContactAngle 25   ArmWidth 5   Thickness 6   PivotHoleDia 3.2
 //     TailLength 12
 //     BasePlane <- the RACK script's GearPlane
@@ -33,9 +33,21 @@
 //  THE PAWL IS A HOOK. A straight arm running from the pivot TO the contact
 //  point can NEVER clear the wheel - the perpendicular distance from the
 //  centre to such a chord is at most the contact radius, which is inside the
-//  tip circle by definition. So the arm stops outside the teeth and a narrow
-//  finger carries on down into the tooth space. The Info output reports the
-//  arm and boss clearances; both must stay positive.
+//  tip circle by definition. So the arm stops outside the teeth and a WEDGE
+//  carries on down into the tooth space. The Info output reports the arm and
+//  boss clearances; both must stay positive.
+//
+//  THE TIP IS A WEDGE, NOT A FINGER. The notch between two teeth is a V. The
+//  old flat-bottomed finger stopped wherever the V narrowed to its own width,
+//  so it bore on only ~40% of the face however deep the tooth was - 0.34 mm
+//  of a 0.8 mm tooth. The wedge is built from the tooth's own lines: loaded
+//  flank ON the locking face, back flank along the ramp of the tooth behind,
+//  so it bears on nearly the whole face. It is also far stronger at its root.
+//
+//  Checked by simulation against the wheel: no overlap when engaged; turning
+//  the wheel the free way lifts the pawl smoothly to 8.9 deg and drops it into
+//  the next notch; turning it the loaded way, any lift only deepens the overlap
+//  - the load cannot lever the pawl out.
 //
 //  CONTACT ANGLE 25, NOT 60. Self-engagement flips sense at about 44 deg,
 //  where the contact force line passes through the pivot. Either side of that
@@ -60,8 +72,8 @@
     List<string> log = new List<string>();
 
     double Dr = RatchetDia   > 1e-9 ? RatchetDia   : 24.0;   // match the wheel
-    int    nz = Teeth        > 3    ? Teeth        : 40;
-    double h  = ToothDepth   > 1e-9 ? ToothDepth   : 0.8;
+    int    nz = Teeth        > 3    ? Teeth        : 30;     // match the wheel
+    double h  = ToothDepth   > 1e-9 ? ToothDepth   : 1.4;    // match the wheel
     double Dp = PivotDist    > 1e-9 ? PivotDist    : 16.0;   // inside the housing bore
     double ca = ContactAngle > 1e-9 ? ContactAngle : 25.0;   // self-engagement flips
                                                          // sense near 44 deg - see Info.
@@ -74,13 +86,18 @@
     double bossDia = 6.8;    // pivot boss diameter. MAX is 2*(PivotDist - R), or
                              // the boss eats into the wheel. At 16 / r12 that is 8.0
     double armClr  = 0.5;    // gap between the arm's inner edge and the tip circle
-    double rootClr = 0.15;   // gap under the finger, so it never bottoms out
+    double rootClr = 0.15;   // the wedge tip must stay at least this far off the root
+    double rampClr = 0.15;   // gap between the wedge's back flank and the ramp
+                             // of the tooth behind - it rides this when ratcheting
+    double wedgeTop = 0.85;  // wedge width at the tip circle, as a fraction of pitch
     double lockAng = 8.0;    // MUST match the wheel's LockAngle
+    double mu      = 0.25;   // friction on the face, for the release-force report
     double pegR    = 8.0;    // spring peg, along the TAIL from the pivot.
                              // MUST match the spring's LegA.
     double pegDia  = 2.0;
     double pegH    = 2.0;    // up off the pawl top, into the spring's band
-    double Treq    = 0.96;   // holding torque [N.m], for the force report
+    double Treq    = 1.92;   // holding torque [N.m] - WORST case, the two-stage
+                             // cam's squeeze. The constant-lead cam is half this.
     double zOff    = 32.0;   // level with the ratchet wheel
 
     double tol = 0.001;
@@ -94,13 +111,11 @@
     // A straight arm running from the pivot TO the contact point can never
     // clear the wheel: the perpendicular distance from the centre to such a
     // chord is at most the contact radius, which is inside the tip circle by
-    // definition. So the ARM stops outside the teeth, at radius rt, and only a
-    // narrow FINGER carries on down into the tooth space.
+    // definition. So the ARM stops outside the teeth, at radius rt, and a
+    // WEDGE carries on down into the tooth space.
     Point3d P0 = new Point3d(Dp, 0.0, 0.0);                  // pivot
     double  rt = R + armClr + 0.5 * aw;                      // arm centreline, far end
     Point3d A  = new Point3d(rt * Math.Cos(cr), rt * Math.Sin(cr), 0.0);
-    double  Rc = R - 0.5 * h;                                // contact, mid-face
-    Point3d C  = new Point3d(Rc * Math.Cos(cr), Rc * Math.Sin(cr), 0.0);
 
     Vector3d u = A - P0;
     double reach = u.Length;
@@ -122,15 +137,54 @@
               " - bossDia must be under " + (2.0 * (Dp - R)).ToString("0.##") + ".");
     if (Dp <= R) log.Add("Pivot is inside the wheel tip circle.");
 
-    // ---------- self-engagement, off the REAL locking face -------------------
-    // The old check assumed a purely tangential load and ignored LockAngle.
-    // The face is undercut, so the contact normal leans - which is the whole
-    // point of the undercut, and it flips the answer near the neutral angle.
+    // ---------- the wedge, built from the tooth's OWN lines -------------------
+    // The wheel is phased so a tooth ROOT sits at ContactAngle; this is drawn
+    // against that tooth. Same lines the wheel script generates, same lean.
     double tLean = h * Math.Tan(RhinoMath.ToRadians(lockAng));
     double dPhi  = Math.Asin(Math.Max(-0.99, Math.Min(0.99, tLean / R)));
-    Point3d fA = new Point3d(Rr * Math.Cos(cr), Rr * Math.Sin(cr), 0.0);
-    Point3d fB = new Point3d(R * Math.Cos(cr + dPhi), R * Math.Sin(cr + dPhi), 0.0);
-    Vector3d fu = fB - fA; fu.Unitize();
+    double pa    = 2.0 * Math.PI / nz;                                  // one tooth
+    Point3d F0 = new Point3d(Rr * Math.Cos(cr), Rr * Math.Sin(cr), 0.0);              // face root
+    Point3d F1 = new Point3d(R * Math.Cos(cr + dPhi), R * Math.Sin(cr + dPhi), 0.0);  // face tip
+    Point3d G1 = new Point3d(R * Math.Cos(cr - pa + dPhi), R * Math.Sin(cr - pa + dPhi), 0.0);
+
+    // the ramp of the tooth behind (G1 -> F0), pushed rampClr into the notch
+    Vector3d rv = F0 - G1; rv.Unitize();
+    Vector3d rn = new Vector3d(rv.Y, -rv.X, 0.0);
+    if (rn.X * Math.Cos(cr) + rn.Y * Math.Sin(cr) < 0.0) rn = -rn;
+    Line faceLn = new Line(F0, F1);
+    Line rampLn = new Line(G1 + rn * rampClr, F0 + rn * rampClr);
+
+    double tA, tB;
+    if (!Rhino.Geometry.Intersect.Intersection.LineLine(faceLn, rampLn, out tA, out tB, 0.0, false))
+    { Info = "Face and ramp are parallel - check Teeth / ToothDepth."; return; }
+    Point3d Pb = faceLn.PointAt(tA);                                    // wedge tip
+
+    double aTop = cr + dPhi;                                            // face tip angle
+    double aBack = aTop - wedgeTop * pa;                                // back edge angle
+    Point3d P2 = new Point3d(rt * Math.Cos(aTop),  rt * Math.Sin(aTop),  0.0);
+    Point3d P3 = new Point3d(rt * Math.Cos(aBack), rt * Math.Sin(aBack), 0.0);
+    Line backLn = new Line(Point3d.Origin, P3);
+    if (!Rhino.Geometry.Intersect.Intersection.LineLine(backLn, rampLn, out tA, out tB, 0.0, false))
+    { Info = "Could not place the wedge's back edge."; return; }
+    Point3d P4 = backLn.PointAt(tA);
+
+    // tip -> up the loaded flank -> into the arm -> back edge -> down the ramp flank
+    Polyline wedgePl = new Polyline(new Point3d[] { Pb, F1, P2, P3, P4, Pb });
+
+    double tipGap  = Pb.DistanceTo(Point3d.Origin) - Rr;               // wedge tip off the root
+    double engaged = Pb.DistanceTo(F1);                                // face it bears on
+    double wTop    = wedgeTop * pa * R;                                // width at the tip circle
+    if (tipGap < rootClr)
+      log.Add("Wedge tip is only " + tipGap.ToString("0.###") + " off the root - raise rampClr.");
+
+    Point3d C  = 0.5 * (Pb + F1);                                      // middle of the contact
+    double  Rc = C.DistanceTo(Point3d.Origin);
+
+    // ---------- self-engagement, off the REAL locking face -------------------
+    // The contact normal comes from the actual face, lean included. The face
+    // leans AWAY from the pawl, so the load pushes the wedge slightly OUT; the
+    // pivot geometry has to more than cancel that.
+    Vector3d fu = F1 - F0; fu.Unitize();
     Vector3d nrm = new Vector3d(fu.Y, -fu.X, 0.0);        // out of the tooth
     Vector3d arm = C - P0;
     double   mom = arm.X * nrm.Y - arm.Y * nrm.X;
@@ -154,15 +208,8 @@
     parts.Add(new Rectangle3d(new Plane(P0, u, uP), new Interval(0.0, reach),
                               new Interval(-0.5 * aw, 0.5 * aw)).ToNurbsCurve());
 
-    // finger: narrow enough to sit in a tooth space. It starts at radius rt,
-    // i.e. ON the arm, so the two overlap and actually fuse.
-    double toothPitch = 2.0 * Math.PI * Rc / nz;
-    double tw = Math.Min(aw, 0.65 * toothPitch);
-    double rFing = Rr + rootClr;
-    Vector3d ri = new Vector3d(-Math.Cos(cr), -Math.Sin(cr), 0.0);
-    Vector3d rp2 = Vector3d.CrossProduct(Vector3d.ZAxis, ri); rp2.Unitize();
-    parts.Add(new Rectangle3d(new Plane(A, ri, rp2), new Interval(0.0, rt - rFing),
-                              new Interval(-0.5 * tw, 0.5 * tw)).ToNurbsCurve());
+    // the wedge - its top edge sits at radius rt, inside the arm, so they fuse
+    parts.Add(wedgePl.ToNurbsCurve());
 
     if (tl > 1e-9)
     {
@@ -182,7 +229,8 @@
     {
       Info = "Could not union the pawl outline - pieces are not overlapping or not coplanar.\n" +
              "boss d " + bd.ToString("0.##") + ", arm reach " + reach.ToString("0.##") +
-             ", tip w " + tw.ToString("0.##") + ", tooth pitch " + toothPitch.ToString("0.##");
+             ", wedge width " + wTop.ToString("0.##") + ", tip at r " +
+             Pb.DistanceTo(Point3d.Origin).ToString("0.##");
       return;
     }
     Curve prof = uni[0];
@@ -239,7 +287,26 @@
     prof.Transform(xf);
 
     // ---------- report -------------------------------------------------------
-    double F = Treq * 1000.0 / Rc;
+    double F      = Treq * 1000.0 / Rc;
+    double faceP  = F / (engaged * th);                        // pressure on the face
+    double wedgeB = F * (R - Rc) / (th * wTop * wTop / 6.0);   // wedge root, at the tip circle
+    double seArm  = Math.Abs(mom);                             // what keeps it in ...
+    double frArm  = Math.Abs(arm.X * fu.Y - arm.Y * fu.X);     // ... and friction along the face
+    double relF   = F * (seArm + mu * frArm) / tl;             // ... which the release must beat
+
+    // how far the pawl must swing for the wedge tip to clear the teeth
+    double liftDeg = 0.0;
+    for (int kL = 0; kL <= 600; kL++)
+    {
+      double aL = -RhinoMath.ToRadians(0.05 * kL);
+      double lx = Pb.X - P0.X, ly = Pb.Y - P0.Y;
+      double qx = P0.X + lx * Math.Cos(aL) - ly * Math.Sin(aL);
+      double qy = P0.Y + lx * Math.Sin(aL) + ly * Math.Cos(aL);
+      liftDeg = 0.05 * kL;
+      if (qx * qx + qy * qy >= R * R) break;
+    }
+    double tailMove = tl * RhinoMath.ToRadians(liftDeg);
+
     System.Text.StringBuilder sb = new System.Text.StringBuilder();
     sb.AppendLine("wheel               tip dia " + Dr.ToString("0.###") +
                   ", root dia " + (2.0 * Rr).ToString("0.###"));
@@ -247,9 +314,9 @@
     sb.AppendLine("contact at          " + ca.ToString("0.#") + " deg, radius " + Rc.ToString("0.###"));
     sb.AppendLine("arm                 " + reach.ToString("0.###") + " long, " +
                   aw.ToString("0.###") + " wide, ending at radius " + rt.ToString("0.###"));
-    sb.AppendLine("finger              " + tw.ToString("0.###") + " wide, radius " +
-                  rFing.ToString("0.###") + " .. " + rt.ToString("0.###") +
-                  "   (tooth pitch " + toothPitch.ToString("0.###") + ")");
+    sb.AppendLine("wedge               bears on " + engaged.ToString("0.###") + " of the " +
+                  h.ToString("0.##") + " face,  " + wTop.ToString("0.###") +
+                  " wide at the tip circle  (pitch " + (pa * R).ToString("0.###") + ")");
     sb.AppendLine("tail                " + tl.ToString("0.###"));
     sb.AppendLine("--");
     sb.AppendLine("CLEARANCE OFF THE WHEEL   tip circle is radius " + R.ToString("0.##"));
@@ -257,10 +324,11 @@
                   (armGap < 0.0 ? "   *** CUTS THE WHEEL ***" : ""));
     sb.AppendLine("  boss              " + bossGap.ToString("0.###") +
                   (bossGap < 0.0 ? "   *** CUTS THE WHEEL ***" : ""));
-    sb.AppendLine("  under the finger  " + rootClr.ToString("0.###") + " off the root");
+    sb.AppendLine("  wedge tip         " + tipGap.ToString("0.###") + " off the root");
     sb.AppendLine("--");
-    sb.AppendLine("self-engaging       " + (selfEng ? "YES - load pulls the finger in" :
-                                                      "NO - load levers the finger out"));
+    sb.AppendLine("self-engaging       " + (selfEng ? "YES - load pulls the wedge in" :
+                                                      "NO - load levers the wedge out") +
+                  ",  moment arm " + seArm.ToString("0.##"));
     sb.AppendLine("contact force       " + F.ToString("0") + " N at " + Treq.ToString("0.##") + " N.m");
     sb.AppendLine("  " + (100.0 * along).ToString("0.#") + "% of it runs ALONG the arm -> " +
                   (F * along / (aw * th)).ToString("0.#") + " MPa compression, " +
@@ -268,6 +336,19 @@
                   " N transverse");
     if (along < 0.9)
       sb.AppendLine("  under 90% - the arm is being bent, not compressed. Retune ContactAngle.");
+    sb.AppendLine("face pressure       " + faceP.ToString("0.#") + " MPa   on " +
+                  engaged.ToString("0.##") + " x " + th.ToString("0.#") +
+                  "   - the number that limits a ratchet this small");
+    sb.AppendLine("wedge bending       " + wedgeB.ToString("0.#") + " MPa   at its root   (POM ~65)");
+    sb.AppendLine("--");
+    sb.AppendLine("RELEASE UNDER LOAD");
+    sb.AppendLine("  lift to clear     " + liftDeg.ToString("0.#") + " deg  ->  tail moves " +
+                  tailMove.ToString("0.##") + " mm");
+    sb.AppendLine("  force on the tail " + relF.ToString("0") + " N   at " + Treq.ToString("0.##") +
+                  " N.m, mu " + mu.ToString("0.##"));
+    sb.AppendLine("  The moment that keeps the pawl in under load is the SAME one the");
+    sb.AppendLine("  release has to beat. Unload it first - push the sleeve down a");
+    sb.AppendLine("  touch - and the lever only has to fight the pawl spring.");
     sb.AppendLine("--");
     Point3d tTip = P0 - u * tl;
     sb.AppendLine("TAIL TIP            radius " + tTip.DistanceTo(Point3d.Origin).ToString("0.###") +
@@ -284,7 +365,7 @@
                     " deg -> the spring's LegA / aA.");
     }
     sb.AppendLine("--");
-    sb.AppendLine("A spring must hold the finger against the wheel; the tail is for");
+    sb.AppendLine("A spring must hold the wedge against the wheel; the tail is for");
     sb.AppendLine("that spring and for the release lever.");
     if (log.Count > 0) { sb.AppendLine("--"); foreach (string s2 in log) sb.AppendLine("! " + s2); }
 
