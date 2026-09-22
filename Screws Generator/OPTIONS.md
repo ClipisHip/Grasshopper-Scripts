@@ -290,6 +290,28 @@ from, and everything downstream follows whichever you give it: nut body, pocket
 width, across-corners. On lock nuts `h=` scales the hex-flats height proportionally,
 so the crimped collar keeps its share of the total.
 
+### Building the string with sliders
+
+`NutOpts` takes these six as numbers and writes the string for you, so you can put
+a slider on each instead of typing. Leave an input at **0** and that key is left out
+entirely, which is how you say "use NutGenerator's default".
+
+Two of the six have a real use for zero — `Slot` (a roofed pocket with no slot) and
+`Chamfer` (no countersink) — and zero is already taken. So on those two a **negative**
+number asks for zero. The other four ignore a negative.
+
+| you set | it writes |
+|---|---|
+| `Slot` = 25 | `slot=25` |
+| `Slot` = −1 | `slot=0` — embedded, for a paused print |
+| `Slot` = 0 | nothing — NutGenerator's default of 2 × across-flats |
+| `Chamfer` = 1 | `chamfer=1` |
+| `Chamfer` = −1 | `chamfer=0` — no countersink |
+| `Chamfer` = 0 | nothing — NutGenerator's default of 0.5 |
+
+It forces a dot as the decimal separator, which matters: `Opts` splits on commas as
+well as spaces, so a locale writing `2,5` would break the string in half.
+
 ### Thread detail
 
 **`chamfer=`** is the countersink at each end of the nut's bore, on the same

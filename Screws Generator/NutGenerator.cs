@@ -710,6 +710,9 @@
       log.Add("ISO / DIN: " + tName[ty] + " is a DIN standard and uses the OLD across-flats, " +
               (sTbl / uf).ToString("0") + ". An ISO-pattern nut is a millimetre smaller and will rattle - " +
               "measure yours and set af= if it is.");
+    if (slotSet && en != 1)
+      log.Add("slot= only does something with Entry side - ignored on " +
+              (en == 0 ? "top entry" : "Entry none") + ".");
     if (embed && sink <= g)
       log.Add("An embedded nut needs a roof - give sink= at least 3 layers of material above it, " +
               "or it is just a top pocket.");

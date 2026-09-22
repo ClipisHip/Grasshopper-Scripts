@@ -6,6 +6,7 @@ one thread profile, so their output mates.
     ScrewGenerator.cs   the screw  +  the hole prep for the part it passes through
     ThreadTap.cs        the internal thread for the part it screws INTO
     NutGenerator.cs     the nut  +  the pocket that captures it
+    NutOpts.cs          builds NutGenerator's Opts string out of sliders
     ScrewOptions.cs     every valid string as a LIST, plus material presets
 
     OPTIONS.md          every option written out, with the dimension charts
@@ -26,6 +27,7 @@ is the whole workflow.
     ScrewOptions.Chamfer               -> ThreadTap.Chamfer
     ScrewGenerator.Spec                -> NutGenerator.Spec
     ScrewOptions.Nuts / .Entries       -> List Item -> NutGenerator.Type / .Entry
+    NutOpts.Opts                       -> NutGenerator.Opts
 
 A slider into each List Item and you can walk the catalogue without typing.
 Right-click the list outputs on ScrewOptions and set them to List access.
