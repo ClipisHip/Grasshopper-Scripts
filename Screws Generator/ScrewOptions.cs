@@ -22,11 +22,12 @@
 //     Fit       string  the preset's clearance class
 //     Chamfer   double  the preset's mouth chamfer IN PITCHES, for ThreadTap.
 //                       No size needed - ThreadTap does the multiply itself.
-//     Opts      string  the preset's Opts string, FOR ScrewGenerator ONLY.  It
-//                       carries seg= and nothing else, so it is empty unless the
-//                       preset wants a resolution other than 96 - which only
-//                       resin, resin-tough and render do.  Empty is correct.
-//                       Do NOT wire it into NutGenerator.Opts: different keys.
+//     ScrewOpts string  the preset's Opts string.  Named for where it GOES:
+//                       ScrewGenerator.Opts, and nowhere else - NutGenerator's
+//                       Opts takes different keys entirely.  It carries seg= and
+//                       nothing else, so it is empty unless the preset wants a
+//                       resolution other than 96 - which only resin, resin-tough
+//                       and render do.  Empty is correct.
 //     MinSize   string  "M6 / 1/4-20" - the smallest metric and inch size this
 //                       preset's Tol still leaves a workable thread on (50% of
 //                       the flank).  Below it, use a heat-set insert or cut a
@@ -45,7 +46,7 @@
 //     ScrewOptions.Presets  -> List Item -> ScrewOptions.Preset
 //     ScrewOptions.Tol   -> ScrewGenerator.Tol
 //     ScrewOptions.Fit   -> ScrewGenerator.Fit
-//     ScrewOptions.Opts  -> ScrewGenerator.Opts
+//     ScrewOptions.ScrewOpts -> ScrewGenerator.Opts
 //     ScrewGenerator.Spec   -> ThreadTap.Spec    <- carries size, hand, tol, seg
 //     ScrewOptions.Chamfer  -> ThreadTap.Chamfer
 //     ScrewGenerator.Spec   -> NutGenerator.Spec <- the same four, into the nut
@@ -66,7 +67,7 @@
 //                           ref object Recesses, ref object Presets,
 //                           ref object Nuts, ref object Entries,
 //                           ref object Tol, ref object Fit, ref object Chamfer,
-//                           ref object Opts, ref object MinSize, ref object Info)
+//                           ref object ScrewOpts, ref object MinSize, ref object Info)
 // ---------------------------------------------------------------------------
 
     System.Globalization.CultureInfo IC = System.Globalization.CultureInfo.InvariantCulture;
@@ -330,9 +331,9 @@
     sb.AppendLine("                        af=<n>    YOUR nut's measured across-flats");
     sb.AppendLine("                        h=<n>     your nut's measured height");
     sb.AppendLine("                        chamfer=<n>  bore countersink, in pitches");
-    sb.AppendLine("  The Opts OUTPUT below goes to ScrewGenerator ONLY. It carries seg= and");
-    sb.AppendLine("  nothing else, so it is EMPTY unless the preset wants a resolution other");
-    sb.AppendLine("  than 96 - only resin, resin-tough and render do. Empty is correct.");
+    sb.AppendLine("  The ScrewOpts output below is named for where it goes. It carries seg=");
+    sb.AppendLine("  and nothing else, so it is EMPTY unless the preset wants a resolution");
+    sb.AppendLine("  other than 96 - only resin, resin-tough and render do. Empty is correct.");
     sb.AppendLine();
     sb.AppendLine("CHAMFER    ThreadTap.Chamfer is IN PITCHES, so one number fits every size:");
     sb.AppendLine("           0.5 cutting metal, 1.0 printing, 0 none. ThreadTap does the");
@@ -351,7 +352,7 @@
       sb.AppendLine("   Cham  " + chamP.ToString("0.##") + " x pitch" +
                     (chamP >= 0.9 ? "   printed: the first thread has nothing under it, so lose it"
                                   : "   cut: the machinist's chamfer, opens the mouth to D + P"));
-      sb.AppendLine("   Opts  " + (oOpts.Length > 0 ? oOpts : "(none needed)"));
+      sb.AppendLine("   ScrewOpts  " + (oOpts.Length > 0 ? oOpts : "(none needed)"));
       sb.AppendLine("   " + pNote);
       if (oTol <= 0.0)
         sb.AppendLine("   Zero clearance. Right for cutting metal, WILL NOT assemble if printed.");
@@ -388,6 +389,6 @@
     Tol      = oTol;
     Fit      = oFit;
     Chamfer  = chamP;
-    Opts     = oOpts;
+    ScrewOpts = oOpts;
     MinSize  = minSize;
     Info     = sb.ToString();

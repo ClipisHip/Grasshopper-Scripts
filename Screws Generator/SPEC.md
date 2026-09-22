@@ -20,7 +20,8 @@ is the whole workflow.
     ScrewOptions.Heads    -> List Item -> ScrewGenerator.Head
     ScrewOptions.Recesses -> List Item -> ScrewGenerator.Recess
     ScrewOptions.Presets  -> List Item -> ScrewOptions.Preset
-    ScrewOptions.Tol / .Fit / .Opts    -> ScrewGenerator
+    ScrewOptions.Tol / .Fit            -> ScrewGenerator.Tol / .Fit
+    ScrewOptions.ScrewOpts             -> ScrewGenerator.Opts
     ScrewGenerator.Spec                -> ThreadTap.Spec
     ScrewOptions.Chamfer               -> ThreadTap.Chamfer
     ScrewGenerator.Spec                -> NutGenerator.Spec

@@ -332,8 +332,8 @@
         else if (ky == "h" || ky == "height") oH = vv;
         else if (ky == "chamfer") chamP = vv;
         else if (ky == "seg" || ky == "segments" || ky == "prep" || ky == "preplen")
-          log.Add("Opts: \"" + ky + "\" is a ScrewGenerator key. Did you wire ScrewOptions.Opts in here? " +
-                  "That output is ScrewGenerator-only. NutGenerator takes sink, slot, bore, af, h and " +
+          log.Add("Opts: \"" + ky + "\" is a ScrewGenerator key. Did you wire ScrewOptions.ScrewOpts " +
+                  "in here? That one goes to ScrewGenerator. NutGenerator takes sink, slot, bore, af, h and " +
                   "chamfer, and it gets seg from Spec.");
         else log.Add("Opts: unknown key \"" + ky + "\" - ignored. Valid: sink, slot, bore, af, h, chamfer.");
       }
