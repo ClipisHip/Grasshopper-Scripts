@@ -238,10 +238,65 @@ the print and dropping the nut in. `Info` prints the height to pause at.
 |---|---|---|
 | `sink=<n>` | `0` | nut top this far below `Pln` (`0` = flush) |
 | `slot=<n>` | `2 × s` | side slot length from the bolt axis. `0` = embed. |
-| `bore=<n>` | 2 d past the nut | how far the bolt bore reaches below `Pln` |
-| `af=<n>` | the table | **your** nut's measured across-flats |
-| `h=<n>` | the table | your nut's measured height |
-| `chamfer=<n>` | `0.5` | bore countersink, in pitches |
+| `bore=<n>` | pocket floor + 2 d | how far the bolt bore reaches below `Pln` |
+| `af=<n>` | the table | **your** nut's measured across-flats (alias `s=`) |
+| `h=<n>` | the table | your nut's measured height (alias `height=`) |
+| `chamfer=<n>` | `0.5` | bore countersink, **in pitches** |
+
+Every one is a length in model units **except `chamfer=`**, which is a multiple of
+the pitch.
+
+```
+   ─────────────────────────────────────────  Pln, the part face
+          ▲                     │
+          │ sink=               │      how deep the nut sits
+          ▼                     │      0 = its top is flush
+       ┌─────────┐              │
+       │ ░░░░░░░ │  H           │      the nut
+       └─────────┘              │
+                                │ bore=   how far the bolt hole
+                                │         goes, measured from Pln
+                                ▼
+```
+
+### Where the nut sits
+
+**`sink=`** pushes the nut deeper. On `top` entry that is just a deeper pocket. On
+`side` entry it is the important one: once `sink` exceeds the clearance the slot
+gains a **lid** of solid material and the nut is buried, so `sink=` is how much
+material ends up over the nut. Ignored on `Entry none`, with a warning.
+
+### How it gets in
+
+**`slot=`** only means anything with `Entry side`. It is how far the slot runs from
+the bolt axis along `+Pln.X`, and it has to **reach the edge of your part** or the
+nut cannot get in — set it to the distance from the axis to the edge plus a little,
+and rotate `Pln` to aim it. It is clamped to at least the pocket's own circumradius,
+because a slot shorter than the nut is not a slot.
+
+`slot=0` is a different thing: no way in at all, a roofed pocket for pausing the
+print and dropping the nut in. `Info` prints the height to pause at.
+
+**`bore=`** is how far the bolt clearance hole reaches below `Pln` — your plate
+thickness, for a clean through hole. A value that stops inside the pocket is taken
+to the pocket floor with a warning. On `Entry none` the default is 2 d, there being
+no pocket.
+
+### What the nut actually is
+
+**`af=`** and **`h=`** take your calipers over the table. `af=` is the answer to the
+ISO/DIN split above — an M10 is 16 or 17 across flats depending on where it came
+from, and everything downstream follows whichever you give it: nut body, pocket
+width, across-corners. On lock nuts `h=` scales the hex-flats height proportionally,
+so the crimped collar keeps its share of the total.
+
+### Thread detail
+
+**`chamfer=`** is the countersink at each end of the nut's bore, on the same
+convention as `ThreadTap.Chamfer`: a multiple of the pitch, so one number suits every
+size. 0.5 is what a real nut has, 1 is worth it if you are **printing** the nut, 0
+removes it. It is cut back automatically if it would eat into the nut's bearing face,
+and `Info` says so when it does.
 
 ### Metric nuts — across flats × height
 
