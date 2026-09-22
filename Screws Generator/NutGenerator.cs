@@ -750,7 +750,9 @@
     sb.AppendLine("clearance     " + g.ToString("0.###") + " per flat" + (inherited ? "   <- inherited from Spec" : ""));
     if (en == 2)
     {
-      sb.AppendLine("POCKET        none - the nut sits on the face, outside the part");
+      sb.AppendLine("POCKET        none - the nut sits on the face, outside the part, so Prep");
+      sb.AppendLine("              is ONLY the bolt bore. For a pocket to capture the nut in,");
+      sb.AppendLine("              set Entry to top (drop it in) or side (slide it in).");
       sb.AppendLine("bolt bore     " + (2.0 * rb2).ToString("0.###") + " dia, " + zb1.ToString("0.###") + " below Pln");
     }
     else
