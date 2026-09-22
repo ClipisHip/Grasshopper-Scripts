@@ -22,7 +22,11 @@
 //     Fit       string  the preset's clearance class
 //     Chamfer   double  the preset's mouth chamfer IN PITCHES, for ThreadTap.
 //                       No size needed - ThreadTap does the multiply itself.
-//     Opts      string  the preset's Opts string, for ScrewGenerator
+//     Opts      string  the preset's Opts string, FOR ScrewGenerator ONLY.  It
+//                       carries seg= and nothing else, so it is empty unless the
+//                       preset wants a resolution other than 96 - which only
+//                       resin, resin-tough and render do.  Empty is correct.
+//                       Do NOT wire it into NutGenerator.Opts: different keys.
 //     MinSize   string  "M6 / 1/4-20" - the smallest metric and inch size this
 //                       preset's Tol still leaves a workable thread on (50% of
 //                       the flank).  Below it, use a heat-set insert or cut a
@@ -316,10 +320,19 @@
     sb.AppendLine("           side     slide it in along +Pln.X - a slot to the part's edge");
     sb.AppendLine("           none     no pocket: the nut sits on the face, Prep is the bolt bore");
     sb.AppendLine();
-    sb.AppendLine("OPTS       ScrewGenerator only, key=value, space separated, all optional");
-    sb.AppendLine("           sink=<n>  extra recess depth below the face");
-    sb.AppendLine("           prep=<n>  how far Prep reaches down");
-    sb.AppendLine("           seg=<n>   thread samples per turn (96 default)");
+    sb.AppendLine("OPTS       THREE inputs are called Opts and they are NOT interchangeable.");
+    sb.AppendLine("  ScrewGenerator.Opts   sink=<n>  extra recess depth below the face");
+    sb.AppendLine("                        prep=<n>  how far Prep reaches down");
+    sb.AppendLine("                        seg=<n>   thread samples per turn (96 default)");
+    sb.AppendLine("  NutGenerator.Opts     sink=<n>  nut top this far below Pln");
+    sb.AppendLine("                        slot=<n>  side slot length, 0 = embed");
+    sb.AppendLine("                        bore=<n>  how far the bolt bore reaches");
+    sb.AppendLine("                        af=<n>    YOUR nut's measured across-flats");
+    sb.AppendLine("                        h=<n>     your nut's measured height");
+    sb.AppendLine("                        chamfer=<n>  bore countersink, in pitches");
+    sb.AppendLine("  The Opts OUTPUT below goes to ScrewGenerator ONLY. It carries seg= and");
+    sb.AppendLine("  nothing else, so it is EMPTY unless the preset wants a resolution other");
+    sb.AppendLine("  than 96 - only resin, resin-tough and render do. Empty is correct.");
     sb.AppendLine();
     sb.AppendLine("CHAMFER    ThreadTap.Chamfer is IN PITCHES, so one number fits every size:");
     sb.AppendLine("           0.5 cutting metal, 1.0 printing, 0 none. ThreadTap does the");

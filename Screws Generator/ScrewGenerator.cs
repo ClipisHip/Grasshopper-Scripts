@@ -344,6 +344,10 @@
         if      (ky == "seg"  || ky == "segments") nSeg    = (int)vv;
         else if (ky == "sink")                     optSink = vv;
         else if (ky == "prep" || ky == "preplen")  optPrep = vv;
+        else if (ky == "slot" || ky == "af" || ky == "s" || ky == "h" || ky == "height" ||
+                 ky == "chamfer" || ky == "bore")
+          log.Add("Opts: \"" + ky + "\" is a NutGenerator key - this is ScrewGenerator, which takes " +
+                  "sink, prep and seg. The two Opts inputs are not interchangeable.");
         else log.Add("Opts: unknown key \"" + ky + "\" - ignored. Valid: sink, prep, seg.");
       }
     }
