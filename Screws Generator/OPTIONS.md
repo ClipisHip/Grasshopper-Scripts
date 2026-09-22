@@ -198,6 +198,100 @@ extrapolated entry in the inch table and `Info` says so when you land on it.
 
 ---
 
+## Nut Type — `NutGenerator.Type`
+
+| value | metric | inch |
+|---|---|---|
+| `hex` | ISO 4032 | ASME B18.2.2 hex nut; hex machine screw nut below 1/4 |
+| `thin` | ISO 4035 | ASME B18.2.2 jam nut, 1/4 and up |
+| `nylock` | ISO 7040 | IFI-100/107 NE / NM |
+| `nylock-thin` | DIN 985 | IFI-100/107 NTE / NTM |
+| `square` | DIN 557 | ASME B18.2.2 square nut; square machine screw nut below 1/4 |
+| `square-thin` | DIN 562 | — no inch standard |
+
+Ask for a size the standard does not make and it refuses, listing what that size
+*does* come in. `jam` reaches `thin`, `nyloc` and `nylon insert` reach `nylock`,
+`quad` reaches `square`.
+
+> **ISO vs DIN — the one that will catch you.** In 1982 ISO changed the across-flats
+> of four sizes; DIN 934 kept the old ones. **M10** is 16 (ISO) or **17** (DIN),
+> **M12** is 18 or **19**, **M14** is 21 or **22**. Much of the stock sold in Europe
+> and online is still DIN, and a pocket cut for a 16 will not take a 17. Put calipers
+> on the nut you have and give the number to `af=`. `Info` reminds you on those sizes.
+> Note the types split across the two families: `hex`/`thin`/`nylock` are ISO, and
+> `nylock-thin`/`square`/`square-thin` are DIN standards carrying the older sizes.
+
+## Entry — `NutGenerator.Entry`
+
+| value | what you get |
+|---|---|
+| `top` | pocket open at the face — drop the nut in |
+| `side` | slot running out along +`Pln.X` — slide the nut in from the edge |
+| `none` | no pocket. The nut sits **on** the face and `Prep` is just the bolt bore |
+
+`side` with `slot=0` is a third thing: a roofed pocket with no way in, for pausing
+the print and dropping the nut in. `Info` prints the height to pause at.
+
+## Opts — `NutGenerator.Opts`
+
+| key | default | what it does |
+|---|---|---|
+| `sink=<n>` | `0` | nut top this far below `Pln` (`0` = flush) |
+| `slot=<n>` | `2 × s` | side slot length from the bolt axis. `0` = embed. |
+| `bore=<n>` | 2 d past the nut | how far the bolt bore reaches below `Pln` |
+| `af=<n>` | the table | **your** nut's measured across-flats |
+| `h=<n>` | the table | your nut's measured height |
+| `chamfer=<n>` | `0.5` | bore countersink, in pitches |
+
+### Metric nuts — across flats × height
+
+| size | hex | thin | nylock | nylock-thin | square | square-thin |
+|---|---|---|---|---|---|---|
+| `M1.6` | 3.2 × 1.3 | 3.2 × 1 | — | — | — | — |
+| `M2` | 4 × 1.6 | 4 × 1.2 | — | — | — | — |
+| `M2.5` | 5 × 2 | 5 × 1.6 | — | — | — | — |
+| `M3` | 5.5 × 2.4 | 5.5 × 1.8 | 5.5 × 4.5 | 5.5 × 4 | — | 5.5 × 1.8 |
+| `M3.5` | 6 × 2.8 | 6 × 2 | — | — | — | — |
+| `M4` | 7 × 3.2 | 7 × 2.2 | 7 × 6 | 7 × 5 | — | 7 × 2.2 |
+| `M5` | 8 × 4.7 | 8 × 2.7 | 8 × 6.8 | 8 × 5 | 8 × 4 | 8 × 2.7 |
+| `M6` | 10 × 5.2 | 10 × 3.2 | 10 × 8 | 10 × 6 | 10 × 5 | 10 × 3.2 |
+| `M8` | 13 × 6.8 | 13 × 4 | 13 × 9.5 | 13 × 8 | 13 × 6.5 | 13 × 4 |
+| `M10` | 16 × 8.4 | 16 × 5 | 16 × 11.9 | 17 × 10 | 17 × 8 | 17 × 5 |
+| `M12` | 18 × 10.8 | 18 × 6 | 18 × 14.9 | 19 × 12 | 19 × 10 | — |
+| `M14` | 21 × 12.8 | 21 × 7 | 21 × 17 | 22 × 14 | — | — |
+| `M16` | 24 × 14.8 | 24 × 8 | 24 × 19.1 | 24 × 16 | 24 × 13 | — |
+| `M20` | 30 × 18 | 30 × 10 | 30 × 22.8 | 30 × 20 | — | — |
+| `M24` | 36 × 21.5 | 36 × 12 | 36 × 27.1 | — | — | — |
+
+### Inch nuts — across flats × height
+
+| size | hex | thin | nylock | nylock-thin | square |
+|---|---|---|---|---|---|
+| `#0` | 0.156 × 0.05 | — | — | — | 0.156 × 0.05 |
+| `#1` | 0.156 × 0.05 | — | — | — | 0.156 × 0.05 |
+| `#2` | 0.188 × 0.066 | — | — | — | 0.188 × 0.066 |
+| `#3` | 0.188 × 0.066 | — | — | — | 0.188 × 0.066 |
+| `#4` | 0.25 × 0.098 | — | 0.251 × 0.153 | 0.251 × 0.124 | 0.25 × 0.098 |
+| `#5` | 0.312 × 0.114 | — | 0.251 × 0.153 | — | 0.312 × 0.114 |
+| `#6` | 0.312 × 0.114 | — | 0.313 × 0.188 | 0.313 × 0.14 | 0.312 × 0.114 |
+| `#8` | 0.344 × 0.13 | — | 0.345 × 0.239 | 0.345 × 0.187 | 0.344 × 0.13 |
+| `#10` | 0.375 × 0.13 | — | 0.376 × 0.249 | 0.376 × 0.187 | 0.375 × 0.13 |
+| `#12` | 0.438 × 0.161 | — | — | — | 0.438 × 0.161 |
+| `1/4` | 0.438 × 0.226 | 0.438 × 0.163 | 0.439 × 0.328 | 0.439 × 0.218 | 0.438 × 0.235 |
+| `5/16` | 0.5 × 0.273 | 0.5 × 0.195 | 0.502 × 0.359 | 0.502 × 0.265 | 0.562 × 0.283 |
+| `3/8` | 0.563 × 0.337 | 0.563 × 0.227 | 0.564 × 0.468 | 0.564 × 0.281 | 0.625 × 0.346 |
+| `7/16` | 0.688 × 0.385 | 0.688 × 0.26 | 0.627 × 0.468 | 0.627 × 0.328 | 0.75 × 0.394 |
+| `1/2` | 0.75 × 0.448 | 0.75 × 0.323 | 0.752 × 0.609 | 0.752 × 0.328 | 0.812 × 0.458 |
+| `5/8` | 0.938 × 0.559 | 0.938 × 0.387 | 0.94 × 0.765 | 0.94 × 0.406 | 1 × 0.569 |
+| `3/4` | 1.125 × 0.665 | 1.125 × 0.446 | 1.064 × 0.89 | 1.064 × 0.421 | 1.125 × 0.68 |
+| `1` | 1.5 × 0.887 | 1.5 × 0.575 | 1.44 × 1.078 | — | 1.5 × 0.903 |
+
+Lock-nut heights are the **total** including the crimped collar; the script also knows
+how much of that is hex flats and shapes the collar accordingly. The inch lock nuts are
+the light hex series, which is why 7/16 and up are a flat smaller than the plain hex nut.
+
+---
+
 ## Presets — `ScrewOptions.Preset`
 
 `Chamfer` is in **pitches**, so the one number suits every size — `ThreadTap`

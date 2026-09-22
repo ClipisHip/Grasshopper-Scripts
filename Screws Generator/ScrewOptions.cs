@@ -16,6 +16,8 @@
 //     Fits      list    every Fit string                     <- List
 //     Recesses  list    every Recess string                  <- List
 //     Presets   list    every Preset name                    <- List
+//     Nuts      list    every NutGenerator Type              <- List
+//     Entries   list    every NutGenerator Entry             <- List
 //     Tol       double  the preset's clearance, in model units
 //     Fit       string  the preset's clearance class
 //     Chamfer   double  the preset's mouth chamfer IN PITCHES, for ThreadTap.
@@ -42,6 +44,9 @@
 //     ScrewOptions.Opts  -> ScrewGenerator.Opts
 //     ScrewGenerator.Spec   -> ThreadTap.Spec    <- carries size, hand, tol, seg
 //     ScrewOptions.Chamfer  -> ThreadTap.Chamfer
+//     ScrewGenerator.Spec   -> NutGenerator.Spec <- the same four, into the nut
+//     ScrewOptions.Nuts     -> List Item -> NutGenerator.Type
+//     ScrewOptions.Entries  -> List Item -> NutGenerator.Entry
 //
 //     A number slider into each List Item's i input and you can walk the whole
 //     catalogue without typing a word.  Leave ThreadTap.Tol at 0: it inherits.
@@ -55,6 +60,7 @@
 //    private void RunScript(string Preset, string Filter,
 //                           ref object Sizes, ref object Heads, ref object Fits,
 //                           ref object Recesses, ref object Presets,
+//                           ref object Nuts, ref object Entries,
 //                           ref object Tol, ref object Fit, ref object Chamfer,
 //                           ref object Opts, ref object MinSize, ref object Info)
 // ---------------------------------------------------------------------------
@@ -148,6 +154,8 @@
     };
     string[] FT = new string[]{ "close", "normal", "loose" };
     string[] RC = new string[]{ "auto", "none", "bore", "sink" };
+    string[] NT = new string[]{ "hex", "thin", "nylock", "nylock-thin", "square", "square-thin" };
+    string[] EN = new string[]{ "top", "side", "none" };
 
     // =======================================================================
     //  PRESETS.  tol is a RADIAL clearance in millimetres; lead is a multiple
@@ -295,6 +303,19 @@
     sb.AppendLine("           bore     counterbore: head sunk in a flat-bottomed pocket");
     sb.AppendLine("           sink     countersink cone, head finishes flush");
     sb.AppendLine();
+    sb.AppendLine("NUT        hex          ISO 4032 / ASME B18.2.2");
+    sb.AppendLine("  (Type)   thin         ISO 4035 / B18.2.2 jam, 1/4 and up");
+    sb.AppendLine("           nylock       ISO 7040 / IFI-100/107 NE");
+    sb.AppendLine("           nylock-thin  DIN 985  / IFI-100/107 NTE");
+    sb.AppendLine("           square       DIN 557  / ASME B18.2.2");
+    sb.AppendLine("           square-thin  DIN 562  (metric only)");
+    sb.AppendLine("           M10 M12 M14: ISO is 16/18/21 across flats, DIN 934 is 17/19/22.");
+    sb.AppendLine("           Measure your nut - af= in NutGenerator.Opts overrides the table.");
+    sb.AppendLine();
+    sb.AppendLine("ENTRY      top      drop the nut into a pocket from the face");
+    sb.AppendLine("           side     slide it in along +Pln.X - a slot to the part's edge");
+    sb.AppendLine("           none     no pocket: the nut sits on the face, Prep is the bolt bore");
+    sb.AppendLine();
     sb.AppendLine("OPTS       ScrewGenerator only, key=value, space separated, all optional");
     sb.AppendLine("           sink=<n>  extra recess depth below the face");
     sb.AppendLine("           prep=<n>  how far Prep reaches down");
@@ -349,6 +370,8 @@
     Fits     = fits;
     Recesses = recs;
     Presets  = presets;
+    Nuts     = new List<string>(NT);
+    Entries  = new List<string>(EN);
     Tol      = oTol;
     Fit      = oFit;
     Chamfer  = chamP;

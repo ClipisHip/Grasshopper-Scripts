@@ -1,10 +1,11 @@
 # SCREWS GENERATOR — SPEC
 
-Three paste-in Grasshopper C# components that share one placement convention and
+Four paste-in Grasshopper C# components that share one placement convention and
 one thread profile, so their output mates.
 
     ScrewGenerator.cs   the screw  +  the hole prep for the part it passes through
     ThreadTap.cs        the internal thread for the part it screws INTO
+    NutGenerator.cs     the nut  +  the pocket that captures it
     ScrewOptions.cs     every valid string as a LIST, plus material presets
 
     OPTIONS.md          every option written out, with the dimension charts
@@ -22,6 +23,8 @@ is the whole workflow.
     ScrewOptions.Tol / .Fit / .Opts    -> ScrewGenerator
     ScrewGenerator.Spec                -> ThreadTap.Spec
     ScrewOptions.Chamfer               -> ThreadTap.Chamfer
+    ScrewGenerator.Spec                -> NutGenerator.Spec
+    ScrewOptions.Nuts / .Entries       -> List Item -> NutGenerator.Type / .Entry
 
 A slider into each List Item and you can walk the catalogue without typing.
 Right-click the list outputs on ScrewOptions and set them to List access.
@@ -131,6 +134,43 @@ Right-click the list outputs on ScrewOptions and set them to List access.
     fit against a nominal screw. Right for a Boolean, will not print.
 
 --------------------------------------------------------------------------------
+## 2b. NUT GENERATOR                                          (NutGenerator.cs)
+
+    INPUTS      Spec        string   ScrewGenerator's Spec, or a bare size.
+                                     Carries size, hand, tol and seg, same as
+                                     it does into ThreadTap.
+                Type        string   hex | thin | nylock | nylock-thin
+                                     | square | square-thin
+                Entry       string   top | side | none
+                Tol         double   clearance override, 0 = inherit from Spec.
+                                     Opens the pocket per flat AND the nut's
+                                     own thread on the radius.
+                Opts        string   sink= slot= bore= af= h= chamfer=
+                Pln         Plane    the face the pocket opens on
+    OUTPUTS     Nut         Brep     the nut (plain bore if Spec says hand=none)
+                Prep        Brep     pocket + bolt bore, DIFFERENCE it out
+                Info        string
+
+    THE POCKET IS THE POINT. A real steel nut costs pennies and will not strip,
+    which makes a captive nut the best answer in plastic at any size — and the
+    only answer below M5, where a printed thread has no flank left (see
+    RECOMMENDATIONS, "Tol is absolute"). Entry says how it gets in:
+
+        top    open at the face, drop it in
+        side   slot out to the edge, slide it in.  Rotate Pln to aim it.
+        none   nut sits ON the face; Prep is only the bolt bore
+        side + slot=0   roofed pocket, no way in: pause the print and drop it
+                        in.  Info tells you the height to pause at.
+
+    The hex has a corner on +X, so across-flats is the width of the side slot
+    and the nut slides straight in.
+
+    ISO vs DIN. M10, M12 and M14 come in two across-flats — 16/18/21 to ISO and
+    17/19/22 to DIN 934, which is much of what is actually sold. A pocket for
+    one will not take the other. Measure the nut and set af= in Opts. Info says
+    so on those sizes, and names which family the Type you picked belongs to.
+
+--------------------------------------------------------------------------------
 ## 3. THE THREAD
 
     Both scripts draw the same zig-zag. It is the ISO 68-1 / ASME B1.1 BASIC
@@ -199,6 +239,14 @@ Right-click the list outputs on ScrewOptions and set them to List access.
     screw, and neither writes a "#". The tpi settles it — #1 comes in 64 and 72,
     and nothing an inch across is finer than 20 — so anything under 40 tpi on a
     bare "1" is read as one inch. Write "#1" if you want the gauge size.
+
+    nuts        metric          hex ISO 4032, thin ISO 4035, nylock ISO 7040,
+                                nylock-thin DIN 985, square DIN 557,
+                                square-thin DIN 562
+                inch            ASME B18.2.2-2010 tables 1-1 / 2 / 4, and
+                                IFI-100/107 NE / NTE for the lock nuts
+                All maxima, so a pocket built from them clears any nut that
+                conforms.
 
     metric      thread          ISO 261 / ISO 262 coarse series, ISO 724 derived
                 clearance       ISO 273 fine / medium / coarse

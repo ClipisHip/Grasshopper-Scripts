@@ -29,9 +29,8 @@ a hole for it to pass through, and something at the far end for it to bite into.
   `loose` plus a big `Tol` pays for it twice. Use `normal` + your measured `Tol`.
 - **Any size works.** An off-the-shelf screw does not care what your printer can
   resolve. Nothing in the size floor applies to you.
-- **The far end is not this toolkit's job.** A captive hex nut in a printed
-  pocket, or a heat-set insert. Both are a hexagon or a circle extruded in
-  Grasshopper — a script would not earn its place.
+- **The far end is `NutGenerator`.** A captive nut in a printed pocket, which
+  is the strongest thing you can do in plastic — see *Captive nuts* below.
 
 ### B — a printed thread
 
@@ -67,6 +66,39 @@ and you are back on path A.
 The stakes are not symmetric, which is why the advice differs: too much `Tol` on
 a clearance hole gives you slop you will probably never notice. Too much on a
 thread strips it.
+
+### Captive nuts
+
+A real steel nut costs pennies, cannot strip, and does not care what your
+printer can resolve. Below M5 it is not just the best answer, it is the only
+one — a printed M4 thread has under half its flank left at any sane clearance.
+
+    NutGenerator   Spec <- ScrewGenerator.Spec   Type hex   Entry top
+                   Tol 0 (inherits)   Pln <- the far face
+        -> subtract Prep. Pocket, bolt bore, done.
+
+**Which entry.** `top` if the face is reachable and points up on the printer —
+no overhang, nut drops in. `side` when the nut has to be buried: the slot runs
+out to an edge and the nut slides in. `side` + `slot=0` embeds it completely,
+for pausing the print — `Info` gives you the pause height.
+
+**Roof and floor are bridges.** A `side` slot needs `sink=` big enough for a
+real roof: three layers minimum, 0.6–0.8 mm, more if anything bears on it. A
+`top` pocket printed opening-down has a hexagonal bridge for a floor, which
+prints better than it sounds but is worth a slow first layer over it.
+
+**Clearance is the same `Tol` as everywhere else** — your printer's error, per
+flat. 0.15–0.20 on FDM. Too tight and the nut will not go in; too loose and it
+spins in the pocket when you tighten, which is the failure you actually notice.
+Err tight and open it with a file.
+
+**Measure the nut.** M10, M12 and M14 exist in two across-flats and the wrong
+one is a scrap part — see OPTIONS.md. `af=` in `Opts` takes your caliper
+reading and overrides the table.
+
+**Pull the nut into its seat, don't push the part.** A captive nut in plastic
+holds because the pocket walls stop it turning, not because the pocket is
+tight. Give the bolt enough thread past the nut and let the joint clamp.
 
 ---
 
@@ -244,7 +276,8 @@ size more again.
 Three ways out, in order of how well they work:
 
 1. **Use a bigger screw.** M5 is the smallest that prints honestly in FDM.
-2. **Use a heat-set insert** and a plain bore. Below M4, this is the answer.
+2. **Use a captive nut** (`NutGenerator`) or a **heat-set insert**. Below M4
+   one of these is the answer, not a printed thread.
 3. **Print the `Drill` hole and cut a real thread** with a tap. Works down to
    M3 because the tap does not care about your printer's tolerance.
 
