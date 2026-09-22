@@ -446,7 +446,7 @@
       }
       angAcc += 2.0 * Math.PI * turns;
     }
-    if (skin.Count == 0) { Info = "Could not build the thread."; return; }
+    if (skin.Count == 0) { Info = "Could not build the thread.\n" + string.Join("\n", log.ToArray()); return; }
     rimT[nSeg] = rimT[0]; rimB[nSeg] = rimB[0];
     Curve loT = new Polyline(rimT).ToPolylineCurve();
     Curve loB = new Polyline(rimB).ToPolylineCurve();
@@ -482,6 +482,10 @@
     Brep[] pl = Brep.CreateFromLoft(new Curve[]{pLo, pHi}, Point3d.Unset, Point3d.Unset, LoftType.Straight, false);
     if (pl != null && pl.Length > 0) prism = pl[0].CapPlanarHoles(tol);
     if (prism == null) { Info = "Could not build the nut body."; return; }
+    // Face it outward BEFORE any Boolean. An inward-oriented solid does not
+    // intersect - it operates on the complement, and what comes back is the six
+    // corner slivers the chamfer cuts off, which have no end faces at all.
+    if (prism.SolidOrientation == BrepSolidOrientation.Inward) prism.Flip();
 
     Brep body = prism;
     if (!square)
@@ -508,11 +512,13 @@
       RevSurface rv = RevSurface.Create(new Polyline(pf).ToPolylineCurve(),
                                         new Line(new Point3d(0, 0, -1), new Point3d(0, 0, 1)));
       Brep rb = (rv != null) ? Brep.CreateFromRevSurface(rv, true, true) : null;
+      if (rb != null && rb.SolidOrientation == BrepSolidOrientation.Inward) rb.Flip();
       Brep[] ix = (rb != null) ? Brep.CreateBooleanIntersection(prism, rb, tol) : null;
       if (ix != null && ix.Length > 0)
       {
         body = ix[0]; double bv = -1.0;
         foreach (Brep bb in ix) { double v = bb.GetBoundingBox(true).Volume; if (v > bv) { bv = v; body = bb; } }
+        if (body.SolidOrientation == BrepSolidOrientation.Inward) body.Flip();
       }
       else
       {
@@ -527,17 +533,39 @@
     // swap the two end faces for annuli around the thread rim
     List<Brep> nf = new List<Brep>();
     Curve capTop = null, capBot = null;
-    double zt = 20.0 * tol;
-    for (int i = 0; i < body.Faces.Count; i++)
+    double zt = Math.Max(20.0 * tol, 0.002 * H);
+    for (int pass = 0; pass < 2; pass++)
     {
-      BrepFace f = body.Faces[i];
-      BoundingBox fb = f.GetBoundingBox(true);
-      bool flat = (fb.Max.Z - fb.Min.Z) < zt;
-      if (flat && Math.Abs(fb.Min.Z) < zt)          { capTop = f.OuterLoop.To3dCurve(); continue; }
-      if (flat && Math.Abs(fb.Min.Z - H) < zt)      { capBot = f.OuterLoop.To3dCurve(); continue; }
-      nf.Add(f.DuplicateFace(false));
+      nf.Clear(); capTop = null; capBot = null;
+      for (int i = 0; i < body.Faces.Count; i++)
+      {
+        BrepFace f = body.Faces[i];
+        BoundingBox fb = f.GetBoundingBox(true);
+        bool flat = (fb.Max.Z - fb.Min.Z) < zt;
+        if (flat && Math.Abs(fb.Min.Z) < zt)     { capTop = f.OuterLoop.To3dCurve(); continue; }
+        if (flat && Math.Abs(fb.Min.Z - H) < zt) { capBot = f.OuterLoop.To3dCurve(); continue; }
+        nf.Add(f.DuplicateFace(false));
+      }
+      if (capTop != null && capBot != null) break;
+      if (pass > 0) break;
+      // Fall back to a plain prism rather than failing outright: a nut with
+      // square corners is still a usable nut, and the pocket is unaffected.
+      log.Add("The chamfered body gave no clean end faces - corners left square. " +
+              "Raise the model tolerance a little if you want the chamfer.");
+      Curve q0 = new Polyline(olP).ToPolylineCurve(), q1 = q0.DuplicateCurve();
+      q1.Translate(0, 0, H);
+      Brep[] ql = Brep.CreateFromLoft(new Curve[]{q0, q1}, Point3d.Unset, Point3d.Unset, LoftType.Straight, false);
+      Brep qb = (ql != null && ql.Length > 0) ? ql[0].CapPlanarHoles(tol) : null;
+      if (qb == null) break;
+      if (qb.SolidOrientation == BrepSolidOrientation.Inward) qb.Flip();
+      body = qb;
     }
-    if (capTop == null || capBot == null) { Info = "Could not find the nut's end faces."; return; }
+    if (capTop == null || capBot == null)
+    {
+      Info = "Could not find the nut's end faces, even on a plain prism.\n" +
+             string.Join("\n", log.ToArray());
+      return;
+    }
     Brep[] aT = Brep.CreatePlanarBreps(new Curve[]{capTop, loT}, tol);
     Brep[] aB = Brep.CreatePlanarBreps(new Curve[]{capBot, loB}, tol);
     if (aT != null && aT.Length > 0) nf.Add(aT[0]); else log.Add("Nut face failed on the face side.");
@@ -553,7 +581,7 @@
       if (!nut.IsSolid) { Brep n2 = nut.CapPlanarHoles(tol); if (n2 != null) nut = n2; }
       if (!nut.IsSolid) log.Add("Nut is not watertight - raise seg= in Spec, or loosen the model tolerance.");
     }
-    else { Info = "Could not join the nut."; return; }
+    else { Info = "Could not join the nut.\n" + string.Join("\n", log.ToArray()); return; }
 
     // hand: ask CreateSpiral which way it winds rather than assume
     bool rhAPI = true;
