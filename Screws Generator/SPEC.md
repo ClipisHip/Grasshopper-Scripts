@@ -9,6 +9,10 @@ one thread profile, so their output mates.
     NutOpts.cs          builds NutGenerator's Opts string out of sliders
     ScrewOptions.cs     every valid string as a LIST, plus material presets
 
+    SpringGenerator.cs  helical compression springs, with the rate and the load
+    SpringOptions.cs    spring materials, end types and preferred wire sizes
+                        -> see SPRINGS.md; they share the folder, not the frame
+
     OPTIONS.md          every option written out, with the dimension charts
     RECOMMENDATIONS.md  what to set for PLA, resin, aluminium, and why
 
